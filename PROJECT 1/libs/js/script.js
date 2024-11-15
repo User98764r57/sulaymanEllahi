@@ -136,6 +136,38 @@ map.on('click', function (e) {
     fetchCountryDataWithFlag(clickedLatLng.lat, clickedLatLng.lng);
 });
 
+document.getElementById('infoButton').onclick = function () {
+    const lat = clickedLatLng ? clickedLatLng.lat : (userLocationFound ? userLat : 0);
+    const lng = clickedLatLng ? clickedLatLng.lng : (userLocationFound ? userLng : 0);
+    fetchCountryData(lat, lng);
+};
+
+document.getElementById('weatherButton').onclick = function () {
+    const lat = clickedLatLng ? clickedLatLng.lat : (userLocationFound ? userLat : 0);
+    const lng = clickedLatLng ? clickedLatLng.lng : (userLocationFound ? userLng : 0);
+    fetchWeatherData(lat, lng);
+};
+
+document.getElementById('currencyButton').onclick = function () {
+    const lat = clickedLatLng ? clickedLatLng.lat : (userLocationFound ? userLat : 0);
+    const lng = clickedLatLng ? clickedLatLng.lng : (userLocationFound ? userLng : 0);
+    fetchCurrencyData(lat, lng);
+};
+
+document.getElementById('wikiButton').onclick = function () {
+    const lat = clickedLatLng ? clickedLatLng.lat : (userLocationFound ? userLat : 0);
+    const lng = clickedLatLng ? clickedLatLng.lng : (userLocationFound ? userLng : 0);
+    fetchWikipediaData(lat, lng);
+};
+
+function showModal(modalId) {
+    document.getElementById(modalId).style.display = 'block';
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
 function fetchCountryDataWithFlag(lat, lng) {
     $.ajax({
         url: 'libs/php/fetch_data.php',
@@ -334,38 +366,14 @@ fetch('libs/js/countryBorders.geojson')
         alert('Error loading GeoJSON file. Check the console for details.');
         checkLoadingComplete(); 
     });
-
-    document.getElementById('infoButton').onclick = function () {
-        if (userLocationFound) {
-            fetchCountryData(userLat, userLng);
-        } else {
-            fetchCountryData(clickedLatLng.lat, clickedLatLng.lng);
-        }
-    };
     
-    document.getElementById('weatherButton').onclick = function () {
-        if (userLocationFound) {
-            fetchWeatherData(userLat, userLng);
-        } else {
-            fetchWeatherData(clickedLatLng.lat, clickedLatLng.lng);
-        }
-    };
+    function showModal(modalId) {
+        document.getElementById(modalId).style.display = 'block';
+    }
     
-    document.getElementById('currencyButton').onclick = function () {
-        if (userLocationFound) {
-            fetchCurrencyData(userLat, userLng);
-        } else {
-            fetchCurrencyData(clickedLatLng.lat, clickedLatLng.lng);
-        }
-    };
-    
-    document.getElementById('wikiButton').onclick = function () {
-        if (userLocationFound) {
-            fetchWikipediaData(userLat, userLng);
-        } else {
-            fetchWikipediaData(clickedLatLng.lat, clickedLatLng.lng);
-        }
-    };
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
     
     function showModal(modalId) {
         document.getElementById(modalId).style.display = 'block';
