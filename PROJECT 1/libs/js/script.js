@@ -26,7 +26,7 @@ const map = L.map('map', {
 }).setView([20, 0], 2);
 
 const Streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: 'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© OpenStreetMap contributors',
+    attribution: '© OpenStreetMap contributors',
     noWrap: false,
     tileSize: 256,
     updateWhenIdle: true,
@@ -59,7 +59,7 @@ const Esri_NatGeoWorldMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/
 });
 
 const Jawg_Matrix = L.tileLayer('https://tile.jawg.io/jawg-matrix/{z}/{x}/{y}{r}.png?access-token=DSkywDmZAwXD3dsZbUNfIFHJvAUqdSVtMDe5eAbdJYhZUXJcg72lCMDNuqpf91UT', {
-    attribution: 'Map data ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© Jawg Maps',
+    attribution: 'Map data © Jawg Maps',
     noWrap: false,
     tileSize: 256,
     updateWhenIdle: true,
