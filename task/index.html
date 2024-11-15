@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>API Test</title>
+    <meta name="description" content="API Test">
+    <meta name="author" content="Sulayman Ellahi">
+    <link rel="stylesheet" href="libs/css/styles.css">
+    <link rel="stylesheet" href="libs/css/bootstrap.min.css">
+</head>
+
+<body>
+    <header><img src="favicon.png" alt="icon"></header>
+
+    <h1>API Application</h1>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>API Name</th>
+                <th>Description</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Earthquakes</td>
+                <td>
+                    This API displays the dates of earthquakes that have happened<br>
+                    <select id="selEarthquakeDate"></select>
+                </td>
+                <td>
+                    <button id="btnRunEarthquake">Submit</button>
+                </td>
+            </tr>
+            <tr>
+                <td>Weather</td>
+                <td>
+                    This API tells you the weather of the station name you select<br>
+                    <select id="selWeatherStation"></select>
+                </td>
+                <td>
+                    <button id="btnRunWeather">Submit</button>
+                </td>
+            </tr>
+            <tr>
+                <td>Cities</td>
+                <td>
+                    This API shows the capital city of the country you select<br>
+                    <select id="selCityCountry"></select>
+                </td>
+                <td>
+                    <button id="btnRunCity">Submit</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div id="divResults">
+        <h2> API Results</h2>
+        <table id="resultsTable" class="table table-striped">
+            <!-- Results will be populated here based on selected API -->
+        </table>
+    </div>
+
+    <div id="preloader"></div>
+
+    <script src="libs/js/jQuery 3.7.1.js"></script>
+    <script src="libs/js/bootstrap.min.js"></script>
+    <script src="libs/js/script.js"></script>
+</body>
+
+</html>
