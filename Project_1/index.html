@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Data Retrieval</title>
+    <link rel="stylesheet" href="libs/css/styles.css">
+    <link rel="stylesheet" href="libs/css/bootstrap.min.css"> 
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+</head>
+<body>
+
+    <div id="map"></div> 
+    
+    <select id="countryDropdown">
+        <option value="none">None</option>
+    </select>
+
+    <div id="controlButtons">
+        <button id="infoButton">&#8505;&#65039;</button>
+        <button id="weatherButton">&#127782;&#65039;</button>
+        <button id="currencyButton">&#128177;</button>
+        <button id="wikiButton">&#128218;</button>
+    </div>
+
+    <div id="countryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close-button" onclick="closeModal('countryModal')">&times;</span>
+                <h2>Country Information</h2>
+            </div>
+            <div id="countryModalContent" class="modal-body"></div>
+        </div>
+    </div>
+
+    <div id="weatherModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('weatherModal')">&times;</span>
+            <h2>Weather Information</h2>
+            <div id="weatherModalContent" class="modal-body"></div>
+        </div>
+    </div>
+
+    <div id="currencyModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('currencyModal')">&times;</span>
+            <h2>Currency Information</h2>
+            <div id="currencyModalContent" class="modal-body"></div>
+        </div>
+    </div>
+
+    <div id="wikiModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('wikiModal')">&times;</span>
+            <h2>Wikipedia Information</h2>
+            <div id="wikiModalContent" class="modal-body"></div>
+        </div>
+    </div>
+
+    <div id="preloader">
+        <div class="loader"></div>
+    </div>
+    
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="libs/js/jQuery 3.7.1.js"></script> 
+    <script src="libs/js/script.js"></script>
+    <script src="libs/js/bootstrap.min.js"></script>
+</body>
+</html>
