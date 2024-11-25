@@ -1,63 +1,63 @@
 <?php
-header('Access-Control-Allow-Origin: *');
-header('Content-Type: application/json'); 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Include the configuration file
-require_once 'config.php';
+header('Content-Type: application/json');
 
-// Function to fetch cities from GeoNames API
-function fetchCities($north, $south, $east, $west, $maxRows = 1000) {
-    $username = GEO_NAMES_USERNAME;
-    $url = "https://secure.geonames.org/citiesJSON?north={$north}&south={$south}&east={$east}&west={$west}&lang=en&username={$username}&maxRows={$maxRows}";
+$username = 'sulyy67694949';
 
-    // Initialize cURL session
-    $ch = curl_init();
+$url = "http://api.geonames.org/citiesJSON?north=90&south=-90&east=180&west=-180&maxRows=500&username=$username";
 
-    // Set cURL options
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+$options = [
+    'http' => [
+        'timeout' => 30
+    ]
+];
+$context = stream_context_create($options);
 
-    // Execute cURL request
-    $response = curl_exec($ch);
+$cacheDir = __DIR__ . '/cache';
+$cacheFile = $cacheDir . '/city_data.json';
+$cacheTime = 3600;
 
-    // Check for cURL errors
-    if (curl_errno($ch)) {
-        http_response_code(500);
-        echo json_encode(['error' => 'Failed to fetch data from GeoNames API.']);
-        curl_close($ch);
-        exit;
-    }
-
-    // Get HTTP response code
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-
-    // Check for successful response
-    if ($httpCode !== 200) {
-        http_response_code($httpCode);
-        echo json_encode(['error' => 'GeoNames API returned an error.']);
-        exit;
-    }
-
-    // Return the API response
-    echo $response;
+if (!file_exists($cacheDir)) {
+    mkdir($cacheDir, 0755, true);
 }
 
-// Retrieve parameters from GET request
-$north = isset($_GET['north']) ? floatval($_GET['north']) : 90;
-$south = isset($_GET['south']) ? floatval($_GET['south']) : -90;
-$east  = isset($_GET['east'])  ? floatval($_GET['east'])  : 180;
-$west  = isset($_GET['west'])  ? floatval($_GET['west'])  : -180;
-$maxRows = isset($_GET['maxRows']) ? intval($_GET['maxRows']) : 1000;
-
-// Validate parameters (optional but recommended)
-if ($north < -90 || $north > 90 || $south < -90 || $south > 90 || $east < -180 || $east > 180 || $west < -180 || $west > 180) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Invalid bounding box parameters.']);
+if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTime) {
+    echo file_get_contents($cacheFile);
     exit;
 }
 
-// Fetch and return cities data
-fetchCities($north, $south, $east, $west, $maxRows);
+function fetchWithRetry($url, $context, $retries = 3) {
+    $attempt = 0;
+    while ($attempt < $retries) {
+        $response = @file_get_contents($url, false, $context);
+        if ($response !== FALSE) {
+            return $response;
+        }
+        $attempt++;
+        sleep(2);
+    }
+    return false;
+}
+
+$response = fetchWithRetry($url, $context);
+
+if ($response === FALSE) {
+    echo json_encode(["error" => "Failed to fetch city data after multiple attempts"]);
+    exit;
+}
+
+$jsonData = json_decode($response, true);
+
+if (!isset($jsonData['geonames'])) {
+    echo json_encode(["error" => "Invalid response from GeoNames API"]);
+    exit;
+}
+
+if (file_put_contents($cacheFile, $response) === FALSE) {
+    echo json_encode(["error" => "Failed to save cache file"]);
+    exit;
+}
+
+echo $response;
