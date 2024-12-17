@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gazetteer</title>
+    <link href="favicon.ico" rel="icon">
+    <link rel="stylesheet" href="libs/css/bootstrap.min.css"> 
+    <link rel="stylesheet" href="libs/css/leaflet.css">
+    <link rel="stylesheet" href="libs/css/MarkerCluster.css">
+    <link rel="stylesheet" href="libs/css/MarkerCluster.Default.css">
+    <link rel="stylesheet" href="libs/css/leaflet.extra-markers.min.css">
+    <link rel="stylesheet" href="libs/css/fontAwesome.css">
+    <link rel="stylesheet" href="libs/css/styles.css">
+</head>
+<body>
+
+    <div id="map"></div> 
+    
+    <select id="countryDropdown">
+        <option value="none">None</option>
+    </select>
+
+    <div id="controlButtons">
+        <button id="infoButton">&#8505;&#65039;</button>
+        <button id="weatherButton">&#127782;&#65039;</button>
+        <button id="currencyButton">&#128177;</button>
+        <button id="wikiButton">&#128218;</button>
+        <button id="newsButton">&#128240;</button>
+    </div>
+
+    <div id="countryModal" class="modal fade" tabindex="-1" aria-labelledby="countryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="countryModalLabel">Country Info</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="countryModalContent">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="weatherModal" class="modal fade" tabindex="-1" aria-labelledby="weatherModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="weatherModalHeader"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="weatherModalContent">
+            </div>
+            <div class="modal-footer">
+                <p>
+                    Powered by <a href="https://www.weatherapi.com/" title="Free Weather API" target="_blank">WeatherAPI.com</a>
+                </p>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="currencyModal" class="modal fade" tabindex="-1" aria-labelledby="currencyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="currencyModalLabel">Currency Converter</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="currencyModalContent">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="wikiModal" class="modal fade" tabindex="-1" aria-labelledby="wikiModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="wikiModalLabel">Wikipedia Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="wikiModalContent">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="newsModal" class="modal fade" tabindex="-1" aria-labelledby="newsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newsModalLabel">News</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="newsModalContent">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div id="preloader">
+        <div class="loader"></div>
+    </div>
+    
+    <script src="libs/js/leaflet.js"></script>
+    <script src="libs/js/leaflet.markercluster.js"></script>
+    <script src="libs/js/leaflet.extra-markers.min.js"></script>
+    <script src="libs/js/fontAwesome.js"></script>
+    <script src="libs/js/date.js"></script>
+    <script src="libs/js/numeral.js"></script>
+    <script src="libs/js/jQuery 3.7.1.js"></script> 
+    <script src="libs/js/bootstrap.min.js"></script>
+    <script src="libs/js/script.js"></script>
+</body>
+</html>
