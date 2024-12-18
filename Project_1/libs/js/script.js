@@ -78,21 +78,6 @@ const weatherIcon = L.divIcon({
 function populateCountryDropdown() {
     const dropdown = document.getElementById('countryDropdown');
 
-    fetch('libs/php/fetch_countries.php')
-        .then(response => response.json())
-        .then(data => {
-            if (Array.isArray(data)) {
-                data.forEach(country => {
-                    const option = document.createElement('option');
-                    option.value = country.isoCode;
-                    option.textContent = country.name;
-                    dropdown.appendChild(option);
-                });
-            } else {
-                console.error('Error fetching countries:', data.error);
-            }
-        })
-        .catch(error => console.error('Error fetching countries:', error.message));
 }
 
 function fetchCitiesByIsoCode(isoCode) {
@@ -114,11 +99,9 @@ function fetchCitiesByIsoCode(isoCode) {
                     }
                 });
                 map.addLayer(cityClusterGroup);
-            } else {
-                console.error('No cities found for the selected ISO code.');
             }
         })
-        .catch(error => console.error('Error fetching city data:', error.message));
+        .catch(() => {});
 }
 
 function fetchAndAddWeatherMarkers(isoCode) {
@@ -137,7 +120,7 @@ function fetchAndAddWeatherMarkers(isoCode) {
                     const humidity = observation.humidity || 'N/A';
                     const stationName = observation.stationName || 'Unknown Station';
                     const datetime = observation.datetime || 'N/A';
-                    const formattedTemperature = numeral(temperature).format('0.0') + '°C';
+                    const formattedTemperature = numeral(temperature).format('0.0') + 'Â°C';
                     const formattedHumidity = numeral(humidity).format('0,0') + '%';
                     const formattedDateTime = new Date(datetime).toString('MMMM d, yyyy h:mm tt');
                     const marker = L.marker([lat, lng], { icon: weatherIcon })
@@ -152,7 +135,7 @@ function fetchAndAddWeatherMarkers(isoCode) {
                 map.addLayer(weatherClusterGroup);
             }
         })
-        .catch(error => console.error('Error fetching weather data:', error.message));
+        .catch(() => {});
 }
 
 document.getElementById('countryDropdown').addEventListener('change', function () {
@@ -209,7 +192,6 @@ document.getElementById('wikiButton').addEventListener('click', () => {
 
 function highlightCountryOnMap(countryCode) {
     if (!geoJsonLayer) {
-        console.error("GeoJSON layer not found. Make sure to load the GeoJSON data first.");
         return;
     }
 
@@ -235,8 +217,6 @@ function highlightCountryOnMap(countryCode) {
         previouslyHighlightedLayer = countryLayer;
 
         map.fitBounds(countryLayer.getBounds());
-    } else {
-        console.error("Country not found in GeoJSON layer.");
     }
 }
 
@@ -279,9 +259,7 @@ fetch('libs/js/countryBorders.geojson')
             dropdown.appendChild(option);
         });
     })
-    .catch(error => {
-        console.error("Error loading GeoJSON:", error);
-    });
+    .catch(() => {});
 
 map.on('zoomend', function () {
     if (map.getZoom() < 2) {
@@ -315,48 +293,10 @@ function fetchCountryDataByISO(isoCode) {
         success: function(data) {
             if (data.country_code) {
                 highlightCountryOnMap(data.country_code);
-            } else {
-                console.error(data.error || "No data found.");
             }
         },
-        error: function(error) {
-            console.error("Error fetching data:", error);
-        }
+        error: function() {}
     });    
-}
-
-function highlightCountryOnMap(countryCode) {
-    if (!geoJsonLayer) {
-        console.error("GeoJSON layer not found. Make sure to load the GeoJSON data first.");
-        return;
-    }
-
-    if (previouslyHighlightedLayer) {
-        previouslyHighlightedLayer.setStyle({
-            fillColor: 'transparent',
-            fillOpacity: 0.5,
-            color: 'transparent' 
-        });
-    }
-
-    const countryLayer = geoJsonLayer.getLayers().find(layer => {
-        return layer.feature.properties.iso_a2 === countryCode;
-    });
-
-    if (countryLayer) {
-        countryLayer.setStyle({
-            fillColor: 'red', 
-            fillOpacity: 0.6, 
-            color: '#000', 
-            weight: 1 
-        });
-
-        previouslyHighlightedLayer = countryLayer;
-
-        map.fitBounds(countryLayer.getBounds());
-    } else {
-        console.error("Country not found in GeoJSON layer.");
-    }
 }
 
 function getUserLocationISO() {
@@ -368,9 +308,7 @@ function getUserLocationISO() {
 
                 fetchISOCodeByCoordinates(lat, lng);
             },
-            function (error) {
-                console.error('Error getting user location:', error);
-            }
+            function () {}
         );
     } else {
         alert("Geolocation is not supported by this browser.");
@@ -386,13 +324,9 @@ function fetchISOCodeByCoordinates(lat, lng) {
         success: function (data) {
             if (data && data.iso_code) {
                 setDropdownToUserCountry(data.iso_code);
-            } else {
-                console.error("ISO code not found for coordinates.");
             }
         },
-        error: function (error) {
-            console.error("Error fetching ISO code:", error);
-        }
+        error: function () {}
     });
 }
 
@@ -415,9 +349,8 @@ fetch('libs/js/countryBorders.geojson')
         geoJsonLoaded = true;
         checkLoadingComplete(); 
     })
-    .catch(error => {
-        console.error('Error loading GeoJSON:', error);
-        alert('Error loading GeoJSON file. Check the console for details.');
+    .catch(() => {
+        alert('Error loading GeoJSON file.');
         checkLoadingComplete(); 
     });
 
@@ -488,13 +421,12 @@ fetch('libs/js/countryBorders.geojson')
                 document.getElementById('countryModalContent').innerHTML = countryInfo;
                 showModal('countryModal');
             },
-            error: function (error) {
-                console.error('Error fetching data from PHP:', error);
-                alert('Error fetching data from PHP. Check the console for details.');
+            error: function () {
+                alert('Error fetching data from PHP.');
             }
         });
     }
-        
+    
     function fetchWeatherDataByISO(isoCode) {
         $.ajax({
             url: 'libs/php/geo_weather.php',
@@ -520,7 +452,7 @@ fetch('libs/js/countryBorders.geojson')
                             <tr>
                                 <td><img src="${data.current_weather.icon}" alt="${data.current_weather.description}" class="weather-icon" /></td>
                                 <td class="weather-description">${data.current_weather.description}</td>
-                                <td class="weather-temperature"><strong>${data.current_weather.temperature ? Math.round(data.current_weather.temperature) + '°C' : 'N/A'}</strong></td>
+                                <td class="weather-temperature"><strong>${data.current_weather.temperature ? Math.round(data.current_weather.temperature) + 'Â°C' : 'N/A'}</strong></td>
                             </tr>
                         </tbody>
                     </table>
@@ -543,7 +475,7 @@ fetch('libs/js/countryBorders.geojson')
                                     <tr>
                                         <td><img src="${forecast.icon}" alt="${forecast.description}" class="weather-icon" /></td>
                                         <td class="weather-description">${forecast.description}</td>
-                                        <td class="weather-temperature"><strong>${forecast.temperature ? Math.round(forecast.temperature) + '°C' : 'N/A'}</strong></td>
+                                        <td class="weather-temperature"><strong>${forecast.temperature ? Math.round(forecast.temperature) + 'Â°C' : 'N/A'}</strong></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -554,13 +486,12 @@ fetch('libs/js/countryBorders.geojson')
                 document.getElementById('weatherModalContent').innerHTML = currentWeatherTable + forecastTables;
                 showModal('weatherModal');
             },
-            error: function (xhr, status, error) {
-                console.error('Error fetching weather data:', error);
-                alert('Error fetching weather data. Check the console for details.');
+            error: function () {
+                alert('Error fetching weather data.');
             }
         });
-    }                    
-        
+    }
+    
     function fetchCurrencyDataByISO(isoCode) {
         $.ajax({
             url: 'libs/php/fetch_data.php',
@@ -568,8 +499,8 @@ fetch('libs/js/countryBorders.geojson')
             data: { iso_code: isoCode },
             dataType: 'json',
             success: function (data) {
-                const currencyCode = data.currency.split(' / ')[2];
-                loadCurrencyOptions(currencyCode);
+                const fromCurrencyCode = 'USD';
+                const toCurrencyCode = data.currency.split(' / ')[2];
     
                 const currencyInfo = `
                     <table>
@@ -593,14 +524,19 @@ fetch('libs/js/countryBorders.geojson')
                 document.getElementById('currencyModalContent').innerHTML = currencyInfo;
                 showModal('currencyModal');
     
-                loadCurrencyOptions(currencyCode).then(() => {
+                loadCurrencyOptions(fromCurrencyCode).then(() => {
+                    const fromDropdown = document.getElementById('from-currency');
+                    const toDropdown = document.getElementById('to-currency');
+    
+                    fromDropdown.value = fromCurrencyCode;
+                    toDropdown.value = toCurrencyCode;
+    
                     setupAutomaticCurrencyConversion();
-                    triggerInitialConversion(); 
+                    triggerInitialConversion();
                 });
             },
-            error: function (error) {
-                console.error('Error fetching currency data:', error);
-                alert('Error fetching currency data. Check the console for details.');
+            error: function () {
+                alert('Error fetching currency data.');
             }
         });
     }
@@ -630,10 +566,9 @@ fetch('libs/js/countryBorders.geojson')
     
                     resolve();
                 },
-                error: function (error) {
-                    console.error("Error fetching currencies:", error);
-                    alert("Error loading currency options. Check the console for details.");
-                    reject(error);
+                error: function () {
+                    alert("Error loading currency options.");
+                    reject();
                 }
             });
         });
@@ -661,9 +596,8 @@ fetch('libs/js/countryBorders.geojson')
                         updateConversionResult(response.convertedAmount);
                     }
                 },
-                error: function (error) {
-                    console.error('Error fetching currency conversion:', error);
-                    alert('Error fetching currency conversion. Check the console for details.');
+                error: function () {
+                    alert('Error fetching currency conversion.');
                 }
             });
         };
@@ -683,7 +617,7 @@ fetch('libs/js/countryBorders.geojson')
         } else {
             resultElement.textContent = 'Result: --';
         }
-    }        
+    }    
     
     function fetchWikipediaDataByISO(isoCode) {
         $.ajax({
@@ -720,12 +654,11 @@ fetch('libs/js/countryBorders.geojson')
                     showModal('wikiModal');
                 }
             },
-            error: function (error) {
-                console.error('Error fetching Wikipedia data:', error);
-                alert('Error fetching Wikipedia data. Check the console for details.');
+            error: function () {
+                alert('Error fetching Wikipedia data.');
             }
         });
-    }  
+    }
     
     function fetchNewsByISO(isoCode) {
         $.ajax({
@@ -739,7 +672,7 @@ fetch('libs/js/countryBorders.geojson')
                     return;
                 }
     
-                let newsHtml = ''; 
+                let newsHtml = '';
     
                 data.forEach(news => {
                     newsHtml += `
@@ -760,28 +693,27 @@ fetch('libs/js/countryBorders.geojson')
                 document.getElementById('newsModalContent').innerHTML = newsHtml;
                 showModal('newsModal');
             },
-            error: function (error) {
-                console.error('Error fetching news:', error);
-                alert('Error fetching news. Check console for details.');
+            error: function () {
+                alert('Error fetching news.');
             }
         });
-    }        
-    
-    document.getElementById('newsButton').addEventListener('click', () => {
-        const isoCode = document.getElementById('countryDropdown').value;
-        if (isoCode !== "none") {
-            fetchNewsByISO(isoCode);
-            $('#newsModal').modal('show');
-        }
-    });
-    
-    function showModal(modalId) {
-        document.getElementById(modalId).style.display = 'block';
     }
     
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
-    }    
+     document.getElementById('newsButton').addEventListener('click', () => {
+            const isoCode = document.getElementById('countryDropdown').value;
+            if (isoCode !== "none") {
+                fetchNewsByISO(isoCode);
+                $('#newsModal').modal('show');
+            }
+        });
+        
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
     
     function getUserLocation() {
         if (navigator.geolocation) {
@@ -793,22 +725,21 @@ fetch('libs/js/countryBorders.geojson')
                     userLat = lat;
                     userLng = lng;
                     userLocationFound = true;
-                    checkLoadingComplete(); 
-    
+                    checkLoadingComplete();
                 },
-                function (error) {
-                    console.error('Error getting user location:', error);
+                function () {
                     alert('Unable to retrieve your location. Showing default map view.');
                     userLocationFound = true;
-                    checkLoadingComplete(); 
+                    checkLoadingComplete();
                 }
             );
         } else {
             alert("Geolocation is not supported by this browser.");
             userLocationFound = true;
-            checkLoadingComplete(); 
+            checkLoadingComplete();
         }
     }
     
     getUserLocation();
+        
     
