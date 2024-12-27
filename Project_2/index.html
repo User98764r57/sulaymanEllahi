@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Directory</title>
+    <link href="libs/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="libs/css/styles.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand text-white" href="#">Company Directory</a>
+            <form class="d-flex me-auto">
+                <input class="form-control me-2" type="search" placeholder="Search Database" aria-label="Search">
+                <button class="btn btn-primary" type="button" id="refresh-btn">Refresh</button>
+            </form>
+            <div class="d-flex align-items-center">
+                <div class="filter-container d-flex">
+                    <div class="me-3">
+                        <label for="role-filter" class="form-label">Filter by Role:</label>
+                        <select class="form-select" id="role-filter">
+                            <option value="">All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="location-filter" class="form-label">Filter by Location:</label>
+                        <select class="form-select" id="location-filter">
+                            <option value="">All</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>    
+    
+    <div class="container database-container">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Contact</th>
+                    <th>Location</th>
+                    <th>Edit</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>[Enter]</td>
+                    <td>[Enter]</td>
+                    <td>[Enter]</td>
+                    <td>[Enter]</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm edit-btn">Edit</button>
+                        <button class="btn btn-danger btn-sm delete-btn">Delete</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="btn btn-success" id="add-row-btn">Add New Row</button>
+    </div>
+    <script src="libs/js/jQuery 3.7.1.js"></script>
+    <script src="libs/js/bootstrap.min.js"></script>
+    <script src="libs/js/script.js"></script>
+</body>
+</html>
