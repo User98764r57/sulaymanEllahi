@@ -5,71 +5,84 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Company Directory</title>
     <link rel="stylesheet" href="libs/css/bootstrap.min.css">
+    <link rel="stylesheet" href="libs/css/all.min.css">
     <link rel="stylesheet" href="libs/css/styles.css">
 </head>
 <body>
-    <section>
-        <div class="appHeader">
-            <div class="row">
-                <div class="col">
-                    <input id="searchInp" class="form-control mb-3" placeholder="search"/>
-                </div>
-                <div class="col-6 text-end me-2">
-                    <div class="btn-group" role="group" aria-label="buttons">
-                        <button id="refreshBtn" type="button" class="btn btn-primary">
-                            &#128260;
-                        </button>
-                        <button id="filterBtn" type="button" class="btn btn-primary">
-                            &#9881;
-                        </button>
-                        <button id="addBtn" type="button" class="btn btn-primary">
-                            &#10133;
-                        </button>
-                    </div>
-                </div>
+   <section>
+      <div class="appHeader">
+        <div class="row">
+          <div class="col">
+            <input
+              id="searchInp"
+              class="form-control mb-3"
+              placeholder="search"
+            />
+          </div>
+
+          <div class="col-6 text-end me-2">
+            <div class="btn-group" role="group" aria-label="buttons">
+              <button id="refreshBtn" type="button" class="btn btn-primary">
+                <i class="fa-solid fa-refresh fa-fw"></i>
+              </button>
+              <button id="filterBtn" type="button" class="btn btn-primary">
+                <i class="fa-solid fa-filter fa-fw"></i>
+              </button>
+              <button id="addBtn" type="button" class="btn btn-primary">
+                <i class="fa-solid fa-plus fa-fw"></i>
+              </button>
             </div>
-            <ul class="nav nav-tabs" id="myTab" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button
-                        class="nav-link active"
-                        id="personnelBtn"
-                        data-bs-toggle="tab"
-                        data-bs-target="#personnel-tab-pane"
-                        type="button"
-                        role="tab"
-                        aria-controls="personnel-tab-pane"
-                        aria-selected="true">
-                        &#128100;<span class="d-none d-sm-block">Personnel</span>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button
-                        class="nav-link"
-                        id="departmentsBtn"
-                        data-bs-toggle="tab"
-                        data-bs-target="#departments-tab-pane"
-                        type="button"
-                        role="tab"
-                        aria-controls="departments-tab-pane"
-                        aria-selected="false">
-                        &#127970;<span class="d-none d-sm-block">Departments</span>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button
-                        class="nav-link"
-                        id="locationsBtn"
-                        data-bs-toggle="tab"
-                        data-bs-target="#locations-tab-pane"
-                        type="button"
-                        role="tab"
-                        aria-controls="locations-tab-pane"
-                        aria-selected="false">
-                        &#128506;&#65039;<span class="d-none d-sm-block">Locations</span>
-                    </button>
-                </li>
-            </ul>
+          </div>
         </div>
+
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button
+              class="nav-link active"
+              id="personnelBtn"
+              data-bs-toggle="tab"
+              data-bs-target="#personnel-tab-pane"
+              type="button"
+              role="tab"
+              aria-controls="home-tab-pane"
+              aria-selected="true"
+            >
+              <i class="fa-solid fa-person fa-lg fa-fw"></i
+              ><span class="d-none d-sm-block">Personnel</span>
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button
+              class="nav-link"
+              id="departmentsBtn"
+              data-bs-toggle="tab"
+              data-bs-target="#departments-tab-pane"
+              type="button"
+              role="tab"
+              aria-controls="profile-tab-pane"
+              aria-selected="false"
+            >
+              <i class="fa-solid fa-building fa-lg fa-fw"></i
+              ><span class="d-none d-sm-block">Departments</span>
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button
+              class="nav-link"
+              id="locationsBtn"
+              data-bs-toggle="tab"
+              data-bs-target="#locations-tab-pane"
+              type="button"
+              role="tab"
+              aria-controls="contact-tab-pane"
+              aria-selected="false"
+            >
+              <i class="fa-solid fa-map-location-dot fa-lg fa-fw"></i
+              ><span class="d-none d-sm-block">Locations</span>
+            </button>
+          </li>
+        </ul>
+      </div>
         
   <div class="tab-content bg-white">
     <div
@@ -386,13 +399,13 @@
           id="confirmDeletePersonnel"
           form="deletePersonnelForm"
           class="btn btn-outline-primary btn-sm myBtn">
-          DELETE
+          YES
         </button>
         <button
           type="button"
           class="btn btn-outline-primary btn-sm myBtn"
           data-bs-dismiss="modal">
-          CANCEL
+          NO
         </button>
       </div>
     </div>
@@ -555,7 +568,7 @@
         <button
           id="confirmDeleteDepartment"
           class="btn btn-outline-danger btn-sm myBtn">
-          DELETE
+          YES
         </button>
         <button
           type="button"
@@ -586,21 +599,19 @@
           data-bs-dismiss="modal"
           aria-label="Close"></button>
       </div>
-
       <div class="modal-body">
-        <input type="hidden" id="deleteDepartmentID"/>
+        <input type="hidden" id="deleteDepartmentID" />
         <p>
           <span id="deleteDepartmentError"></span> has denied removal
           as it has 
           <span id="personnelAssigned"></span> employees
           with it.
         </p>
-      </d
-
-     <div class="modal-footer">
+      </div>
+      <div class="modal-footer">
         <button
           type="button"
-          class="btn btn-outline-primary btn-sm myBtn"
+          class="btn btn-outline-primary btn-sm myBtn ms-auto"
           data-bs-dismiss="modal">
           OK
         </button>
@@ -749,13 +760,13 @@
         <button
           id="confirmDeleteLocation"
           class="btn btn-outline-danger btn-sm myBtn">
-          DELETE
+          YES
         </button>
         <button
           type="button"
           class="btn btn-outline-secondary btn-sm myBtn"
           data-bs-dismiss="modal">
-          CANCEL
+          NO
         </button>
       </div>
     </div>
@@ -780,21 +791,19 @@
           data-bs-dismiss="modal"
           aria-label="Close"></button>
       </div>
-
       <div class="modal-body">
-        <input type="hidden" id="deleteLocationID"/>
+        <input type="hidden" id="deleteLocationID" />
         <p>
           <span id="deleteLocationError"></span> has denied removal 
           as it has 
           <span id="departmentAssign"></span> departments
-           in it.
+          in it.
         </p>
       </div>
-
       <div class="modal-footer">
         <button
           type="button"
-          class="btn btn-outline-primary btn-sm myBtn"
+          class="btn btn-outline-primary btn-sm myBtn ms-auto"
           data-bs-dismiss="modal">
           OK
         </button>
