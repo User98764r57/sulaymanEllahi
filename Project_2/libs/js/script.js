@@ -16,10 +16,12 @@ const getLocations = (searchTerm = "") => {
         success: function (result) {
             if (result.status.name === "ok") {
                 $("#locationTable").empty();
-                result.data.forEach(location => {
-                    $("#locationTable").append(
-                        `<tr id="${location.id}">
-                            <td id="${location.id}" class="align-middle text-nowrap bg-light">${location.name}</td>
+                result.data.forEach((location) => {
+                    $("#locationTable").append(`
+                        <tr id="${location.id}">
+                            <td class="align-middle text-nowrap bg-light">
+                                ${location.name}
+                            </td>
                             <td class="align-middle text-end text-nowrap bg-light">
                                 <button
                                     id="editLocationBtn"
@@ -28,7 +30,7 @@ const getLocations = (searchTerm = "") => {
                                     data-bs-toggle="modal"
                                     data-bs-target="#editLocationModal"
                                     data-id="${location.id}">
-                                    &#x270F;&#xFE0F;
+                                    <i class="fa-solid fa-pencil fa-fw"></i>
                                 </button>
                                 <button
                                     type="button"
@@ -36,11 +38,11 @@ const getLocations = (searchTerm = "") => {
                                     class="btn btn-primary btn-sm"
                                     data-id="${location.id}"
                                     data-name="${location.name}">
-                                    &#x1F5D1;&#xFE0F;
+                                    <i class="fa-solid fa-trash fa-fw"></i>
                                 </button>
                             </td>
-                        </tr>`
-                    );
+                        </tr>
+                    `);
                 });
             }
         },
@@ -59,11 +61,15 @@ const getDepartments = (searchTerm = "") => {
         success: function (result) {
             if (result.status.name === "ok") {
                 $("#departmentTable").empty();
-                result.data.forEach(department => {
-                    $("#departmentTable").append(
-                        `<tr id="${department.id}">
-                            <td id="${department.id}" class="align-middle text-nowrap bg-light">${department.name}</td>
-                            <td class="align-middle text-nowrap d-none d-md-table-cell bg-light">${department.location}</td>
+                result.data.forEach((department) => {
+                    $("#departmentTable").append(`
+                        <tr id="${department.id}">
+                            <td id="${department.id}" class="align-middle text-nowrap bg-light">
+                                ${department.name}
+                            </td>
+                            <td class="align-middle text-nowrap d-none d-md-table-cell bg-light">
+                                ${department.location}
+                            </td>
                             <td class="align-middle text-end text-nowrap bg-light">
                                 <button
                                     id="editDepartmentBtn"
@@ -72,19 +78,19 @@ const getDepartments = (searchTerm = "") => {
                                     data-bs-toggle="modal"
                                     data-bs-target="#editDepartmentModal"
                                     data-id="${department.id}">
-                                    &#x270F;&#xFE0F;
+                                    <i class="fa-solid fa-pencil fa-fw"></i>
                                 </button>
                                 <button
                                     type="button"
                                     id="deleteDepartmentBtn"
-                                    class="btn btn-primary btn-sm"
+                                    class="btn btn-primary btn-sm deleteDepartmentBtn"
                                     data-id="${department.id}"
                                     data-name="${department.name}">
-                                    &#x1F5D1;&#xFE0F;
+                                    <i class="fa-solid fa-trash fa-fw"></i>
                                 </button>
                             </td>
-                        </tr>`
-                    );
+                        </tr>
+                    `);
                 });
             }
         },
@@ -103,13 +109,21 @@ const getPersonnel = (searchTerm = "", departmentFilter = "", locationFilter = "
         success: function (result) {
             if (result.status.name === "ok") {
                 $("#personnelTable").empty();
-                result.data.forEach(personnel => {
-                    $("#personnelTable").append(
-                        `<tr id="${personnel.id}">
-                            <td class="align-middle text-nowrap bg-light">${personnel.lastName}, ${personnel.firstName}</td>
-                            <td class="align-middle text-nowrap d-none d-md-table-cell bg-light">${personnel.department}</td>
-                            <td class="align-middle text-nowrap d-none d-md-table-cell bg-light">${personnel.location}</td>
-                            <td class="align-middle text-nowrap d-none d-md-table-cell bg-light">${personnel.email}</td>
+                result.data.forEach((personnel) => {
+                    $("#personnelTable").append(`
+                        <tr id="${personnel.id}">
+                            <td class="align-middle text-nowrap bg-light">
+                                ${personnel.lastName}, ${personnel.firstName}
+                            </td>
+                            <td class="align-middle text-nowrap d-none d-md-table-cell bg-light">
+                                ${personnel.department}
+                            </td>
+                            <td class="align-middle text-nowrap d-none d-md-table-cell bg-light">
+                                ${personnel.location}
+                            </td>
+                            <td class="align-middle text-nowrap d-none d-md-table-cell bg-light">
+                                ${personnel.email}
+                            </td>
                             <td class="text-end text-nowrap bg-light">
                                 <button
                                     type="button"
@@ -117,7 +131,7 @@ const getPersonnel = (searchTerm = "", departmentFilter = "", locationFilter = "
                                     data-bs-toggle="modal"
                                     data-bs-target="#editPersonnelModal"
                                     data-id="${personnel.id}">
-                                    &#x270F;&#xFE0F;
+                                    <i class="fa-solid fa-pencil fa-fw"></i>
                                 </button>
                                 <button
                                     type="button"
@@ -125,11 +139,11 @@ const getPersonnel = (searchTerm = "", departmentFilter = "", locationFilter = "
                                     data-bs-toggle="modal"
                                     data-bs-target="#deletePersonnelModal"
                                     data-id="${personnel.id}">
-                                    &#x1F5D1;&#xFE0F;
+                                    <i class="fa-solid fa-trash fa-fw"></i>
                                 </button>
                             </td>
-                        </tr>`
-                    );
+                        </tr>
+                    `);
                 });
             }
         },
@@ -293,28 +307,22 @@ $("#editPersonnelModal").on("show.bs.modal", function (e) {
         $("#editPersonnelJobTitle").val(result.data.personnel[0].jobTitle);
         $("#editPersonnelEmailAddress").val(result.data.personnel[0].email);
 
-        $("#editPersonnelDepartment").html("");
+        $("#editPersonnelDepartment").empty();
+        const fragment = document.createDocumentFragment();
         $.each(result.data.department, function () {
-          $("#editPersonnelDepartment").append(
-            $("<option>", {
-              value: this.id,
-              text: this.name,
-            })
-          );
+          const option = document.createElement("option");
+          option.value = this.id;
+          option.textContent = this.name;
+          fragment.appendChild(option);
         });
-        $("#editPersonnelDepartment").val(
-          result.data.personnel[0].departmentID
-        );
+        $("#editPersonnelDepartment").append(fragment);
+        $("#editPersonnelDepartment").val(result.data.personnel[0].departmentID);
       } else {
-        $("#editPersonnelModal .modal-title").replaceWith(
-          "Error fetching data."
-        );
+        $("#editPersonnelModal .modal-title").text("Error fetching data.");
       }
     },
     error: function (jqXHR, textStatus, errorThrown) {
-      $("#editPersonnelModal .modal-title").replaceWith(
-        "Error fetching data"
-      );
+      $("#editPersonnelModal .modal-title").text("Error fetching data.");
       alert("Error fetching data.");
     },
   });
@@ -370,28 +378,22 @@ $("#editDepartmentModal").on("show.bs.modal", function (e) {
         $("#editDepartmentID").val(result.data.department[0].id);
         $("#editDepartmentName").val(result.data.department[0].name);
 
-        $("#editDepartmentLocation").html("");
+        $("#editDepartmentLocation").empty();
+        const fragment = document.createDocumentFragment();
         $.each(result.data.location, function () {
-          $("#editDepartmentLocation").append(
-            $("<option>", {
-              value: this.id,
-              text: this.name,
-            })
-          );
+          const option = document.createElement("option");
+          option.value = this.id;
+          option.textContent = this.name;
+          fragment.appendChild(option);
         });
-        $("#editDepartmentLocation").val(
-          result.data.department[0].locationID
-        );
+        $("#editDepartmentLocation").append(fragment);
+        $("#editDepartmentLocation").val(result.data.department[0].locationID);
       } else {
-        $("#editPersonnelModal .modal-title").replaceWith(
-          "Error fetching data"
-        );
+        $("#editPersonnelModal .modal-title").text("Error fetching data");
       }
     },
     error: function (jqXHR, textStatus, errorThrown) {
-      $("#editPersonnelModal .modal-title").replaceWith(
-        "Error fetching data."
-      );
+      $("#editPersonnelModal .modal-title").text("Error fetching data.");
       alert("Error fetching data.");
     },
   });
@@ -399,7 +401,6 @@ $("#editDepartmentModal").on("show.bs.modal", function (e) {
 
 $("#editDepartmentForm").on("submit", function (e) {
   e.preventDefault();
-
   const id = $("#editDepartmentID").val();
   const departmentName = $("#editDepartmentName").val();
   const location = $("#editDepartmentLocation").val();
@@ -413,7 +414,6 @@ $("#editDepartmentForm").on("submit", function (e) {
   $("#departmentTable tr").each(function () {
     let currentRowId = $(this).find("td:first").attr("id");
     let firstColumnData = $(this).find("td:first").text();
-
     if (
       firstColumnData.toLowerCase() === departmentName.toLowerCase() &&
       currentRowId !== id
@@ -454,20 +454,15 @@ $("#editLocationModal").on("show.bs.modal", function (e) {
     success: function (result) {
       $("#errorMessageLocation").empty();
       var resultCode = result.status.code;
-
       if (resultCode == 200) {
         $("#editLocationID").val(result.data[0].id);
         $("#editLocationName").val(result.data[0].name);
       } else {
-        $("#editPersonnelModal .modal-title").replaceWith(
-          "Error fetching location data"
-        );
+        $("#editPersonnelModal .modal-title").text("Error fetching location data");
       }
     },
     error: function (jqXHR, textStatus, errorThrown) {
-      $("#editPersonnelModal .modal-title").replaceWith(
-        "Error fetching data."
-      );
+      $("#editPersonnelModal .modal-title").text("Error fetching data.");
       alert("Error fetching data.");
     },
   });
@@ -475,7 +470,6 @@ $("#editLocationModal").on("show.bs.modal", function (e) {
 
 $("#editLocationForm").on("submit", function (e) {
   e.preventDefault();
-
   const id = $("#editLocationID").val();
   const locationName = $("#editLocationName").val();
   const locationFormData = {
@@ -487,7 +481,6 @@ $("#editLocationForm").on("submit", function (e) {
   $("#locationTable tr").each(function () {
     let currentRowId = $(this).find("td:first").attr("id");
     let firstColumnData = $(this).find("td:first").text();
-
     if (
       firstColumnData.toLowerCase() === locationName.toLowerCase() &&
       currentRowId !== id
@@ -744,14 +737,14 @@ $("#insertDepartmentModal").on("show.bs.modal", function () {
         $("#errorMessageDepartmentAdd").empty();
         $("#insertDepartmentName").val("");
         $("#insertDepartmentLocation").html("");
+        const fragment = document.createDocumentFragment();
         $.each(result.data, function () {
-          $("#insertDepartmentLocation").append(
-            $("<option>", {
-              value: this.id,
-              text: this.name,
-            })
-          );
+          const option = document.createElement("option");
+          option.value = this.id;
+          option.textContent = this.name;
+          fragment.appendChild(option);
         });
+        $("#insertDepartmentLocation").append(fragment);
       } else {
         $("#insertDepartmentModal .modal-title").text("Error retrieving data");
       }
@@ -810,14 +803,14 @@ $("#insertPersonnelModal").on("show.bs.modal", function () {
       var resultCode = result.status.code;
       if (resultCode == 200) {
         $("#insertPersonnelDepartment").html("");
+        const fragment = document.createDocumentFragment();
         $.each(result.data, function () {
-          $("#insertPersonnelDepartment").append(
-            $("<option>", {
-              value: this.id,
-              text: this.name,
-            })
-          );
+          const option = document.createElement("option");
+          option.value = this.id;
+          option.textContent = this.name;
+          fragment.appendChild(option);
         });
+        $("#insertPersonnelDepartment").append(fragment);
       } else {
         $("#insertPersonnelModal .modal-title").text("Error retrieving data");
       }
