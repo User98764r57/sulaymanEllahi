@@ -51,8 +51,6 @@
 
 	}
 
-	// second query - does not accept parameters and so is not prepared
-
 	$query = 'SELECT id, name from department ORDER BY name';
 
 	$result = $conn->query($query);
