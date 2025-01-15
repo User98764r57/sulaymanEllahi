@@ -3,7 +3,7 @@ header('Content-Type: application/json');
 
 if (isset($_GET['iso_code'])) {
     $isoCode = $_GET['iso_code'];
-    $apiKey = "c2891d68-a3d3-45ec-a892-181a3e5404b6";
+    $apiKey = "d95dcb82-b98c-4169-a28d-5a769cbec28b";
     $apiURL = "https://api.goperigon.com/v1/all?sourceCountry={$isoCode}&apiKey={$apiKey}";
     
     $response = file_get_contents($apiURL);
