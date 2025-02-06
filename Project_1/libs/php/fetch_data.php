@@ -9,7 +9,7 @@ if (isset($_GET['from']) && isset($_GET['to']) && isset($_GET['amount'])) {
     $toCurrency = $_GET['to'];
     $amount = $_GET['amount'];
 
-    $exchangeApiKey = '65c3f72b5722c75e5a932a6d';
+    $exchangeApiKey = '(enter username/API Key)';
     $url = "https://v6.exchangerate-api.com/v6/{$exchangeApiKey}/pair/{$fromCurrency}/{$toCurrency}/{$amount}";
 
     $ch = curl_init();
@@ -52,7 +52,7 @@ if (isset($_GET['iso_code'])) {
             : 'N/A';
         $population = $restCountriesData[0]['population'] ?? 'N/A';
 
-        $openCageApiKey = '3016afca484a4f13b9b7263ab6a32e77';
+        $openCageApiKey = '(enter username/API Key)';
         $openCageUrl = "https://api.opencagedata.com/geocode/v1/json?q=" . urlencode($country) . "&key={$openCageApiKey}";
         $openCageData = json_decode(curlRequest($openCageUrl), true);
 
@@ -72,7 +72,7 @@ if (isset($_GET['iso_code'])) {
         exit;
     }
 
-    $geoNamesUsername = 'sulayman2e';
+    $geoNamesUsername = '(enter username/API Key)';
     $timezoneUrl = "http://api.geonames.org/timezoneJSON?country={$isoCode}&username={$geoNamesUsername}";
     $wikiSearchUrl = "http://api.geonames.org/wikipediaSearchJSON?q=" . urlencode($country) . "&maxRows=10&username={$geoNamesUsername}";
 
