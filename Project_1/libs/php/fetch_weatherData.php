@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
 
-$username = 'sulayman2e';
+$username = '(enter username/API Key)';
 
 $icaoCodes = [
 
