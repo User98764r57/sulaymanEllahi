@@ -8,7 +8,7 @@ $executionStartTime = microtime(true);
 
 $city = $_REQUEST['city'];
 
-$url = 'http://api.geonames.org/citiesJSON?formatted=true&north=' . $_REQUEST['north'] . '&south=' . $_REQUEST['south'] . '&east=' . $_REQUEST['east'] . '&west=' . $_REQUEST['west'] . '&username=sulyy67694949';
+$url = 'http://api.geonames.org/citiesJSON?formatted=true&north=' . $_REQUEST['north'] . '&south=' . $_REQUEST['south'] . '&east=' . $_REQUEST['east'] . '&west=' . $_REQUEST['west'] . '&username=(enter username/API Key)';
 
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
