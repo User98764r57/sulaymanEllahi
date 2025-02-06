@@ -1,11 +1,11 @@
 <?php
 
-	$cd_host = "mysql-200-139.mysql.prositehosting.net";
-	$cd_port = 3306;
+	$cd_host = "(enter cd host)";
+	$cd_port = (enter cd port);
 	$cd_socket = "";
 
-	$cd_dbname = "companydirectory";
-	$cd_user = "sulaymanellahi";
-	$cd_password = "mirtow-Sukgy7-duxjik";
+	$cd_dbname = "(enter cd dbname)";
+	$cd_user = "(enter cd user)";
+	$cd_password = "(enter cd password)";
 
 ?>
