@@ -2,8 +2,8 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-$geonamesUsername = "sulyy67694949";
-$weatherApiKey = "080e10a6ef5943cf96a14039241112";
+$geonamesUsername = "(enter username/API Key)";
+$weatherApiKey = "(enter username/API Key)";
 
 header('Content-Type: application/json');
 
