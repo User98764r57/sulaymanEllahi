@@ -4,7 +4,8 @@ header('Access-Control-Allow-Origin: *');
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-$url = "https://v6.exchangerate-api.com/v6/65c3f72b5722c75e5a932a6d/codes";
+$exchangeApiKey = '(enter username/API Key)'; 
+$url = "https://v6.exchangerate-api.com/v6/{$exchangeApiKey}/codes";
 
 $response = file_get_contents($url);
 
