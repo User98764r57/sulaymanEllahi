@@ -4,7 +4,7 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "Bahamas",
+        "name": "Bahamas", 
         "iso_a2": "BS",
         "iso_a3": "BHS",
         "iso_n3": "044"
