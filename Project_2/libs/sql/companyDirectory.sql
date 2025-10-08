@@ -4,7 +4,7 @@
 -- Server OS:                    Win64
 -- HeidiSQL Version:             11.3.0.6333
 -- --------------------------------------------------------
-
+      
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET NAMES utf8 */;
 /*!50503 SET NAMES utf8mb4 */;
@@ -177,3 +177,4 @@ INSERT INTO `personnel` (`id`, `firstName`, `lastName`, `jobTitle`, `email`, `de
 /*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40111 SET SQL_NOTES=IFNULL(@OLD_SQL_NOTES, 1) */;
+
