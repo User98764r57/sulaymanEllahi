@@ -5,9 +5,8 @@ let geoJsonLoaded = false;
 let currentRequest = null;
 let activeModal = null;
 
-// Remove bounds for horizontal scrolling, only restrict vertical extremes
-const southWest = L.latLng(-85, -Infinity); // Allow infinite horizontal scrolling
-const northEast = L.latLng(85, Infinity);   // Allow infinite horizontal scrolling
+const southWest = L.latLng(-85, -Infinity);
+const northEast = L.latLng(85, Infinity);
 const bounds = L.latLngBounds(southWest, northEast);
 
 function checkLoadingComplete() {
@@ -26,7 +25,7 @@ document.getElementById('preloader').style.display = 'flex';
 const map = L.map('map', {
     minZoom: 2,
     maxZoom: 18,
-    worldCopyJump: true, // Enable horizontal wrapping
+    worldCopyJump: true,
     inertia: true,
     inertiaDeceleration: 2000,
     zoomAnimation: true,
@@ -35,20 +34,14 @@ const map = L.map('map', {
     wheelPxPerZoomLevel: 120,
     zoomControl: true,
     maxBounds: bounds,
-    maxBoundsViscosity: 0.5 // Less restrictive for better scrolling
+    maxBoundsViscosity: 0.5
 }).setView([20, 0], 2);
 
-// Set bounds but allow horizontal overflow
 map.setMaxBounds(bounds);
-
-// Remove the restrictive drag event listener that was preventing horizontal scrolling
-// map.on('drag', function() {
-//     map.panInsideBounds(bounds, { animate: false });
-// });
 
 const Streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors',
-    noWrap: false, // Allow horizontal wrapping
+    noWrap: false,
     tileSize: 256,
     updateWhenIdle: true,
     keepBuffer: 8,
@@ -59,7 +52,7 @@ const Streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 
 const Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
     attribution: 'Source: Esri, USGS, NOAA',
-    noWrap: false, // Allow horizontal wrapping
+    noWrap: false,
     tileSize: 256,
     updateWhenIdle: true,
     keepBuffer: 8,
@@ -68,7 +61,6 @@ const Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/re
     reuseTiles: true
 });
 
-// Rest of your script.js remains the same...
 const baseMaps = {
     "Streets": Streets,
     "Satellite": Esri_WorldImagery
@@ -156,11 +148,9 @@ function fetchAndAddWeatherMarkers(isoCode) {
         .catch(() => {});
 }
 
-// Improved country dropdown change handler
 document.getElementById('countryDropdown').addEventListener('change', function() {
     const selectedISOCode = this.value;
     
-    // Cancel any pending request
     if (currentRequest) {
         currentRequest.abort();
     }
@@ -180,12 +170,10 @@ document.getElementById('countryDropdown').addEventListener('change', function()
     }
 });
 
-// Function to clear all layers properly
 function clearAllLayers() {
     cityClusterGroup.clearLayers();
     weatherClusterGroup.clearLayers();
     
-    // Clear any pending timeouts
     const highestTimeoutId = setTimeout(() => {}, 0);
     for (let i = 0; i < highestTimeoutId; i++) {
         clearTimeout(i);
@@ -195,7 +183,6 @@ function clearAllLayers() {
 let geoJsonLayer;
 let previouslyHighlightedLayer = null;
 
-// Improved modal button handlers
 document.getElementById('infoButton').addEventListener('click', function() {
     const isoCode = document.getElementById('countryDropdown').value;
     if (isoCode !== "none") {
@@ -216,7 +203,6 @@ document.getElementById('currencyButton').addEventListener('click', function() {
     const isoCode = document.getElementById('countryDropdown').value;
     if (isoCode !== "none") {
         $('#currencyModal').modal('show');
-        // Load currency data when modal is shown
         setTimeout(() => {
             fetchCurrencyDataByISO(isoCode);
         }, 100);
@@ -271,7 +257,6 @@ function highlightCountryOnMap(countryCode) {
 
 populateCountryDropdown();
 
-// Updated overlay names
 overlayMaps["Cities"] = cityClusterGroup;
 overlayMaps["Airports"] = weatherClusterGroup;
 
@@ -318,7 +303,6 @@ map.on('zoomend', function () {
 });
 
 function fetchCountryDataByISO(isoCode) {
-    // Cancel any previous request
     if (currentRequest) {
         currentRequest.abort();
     }
@@ -402,7 +386,6 @@ function closeModal(modalId) {
 }
 
 function fetchCountryInformation(isoCode) {
-    // Clear previous content immediately
     document.getElementById('countryModalContent').innerHTML = '<div class="text-center">Loading...</div>';
     
     $.ajax({
@@ -410,7 +393,7 @@ function fetchCountryInformation(isoCode) {
         type: 'GET',
         data: { iso_code: isoCode },
         dataType: 'json',
-        timeout: 10000, // 10 second timeout
+        timeout: 10000,
         success: function (data) {
             if (data.error) {
                 document.getElementById('countryModalContent').innerHTML = `<div class="text-center text-danger">${data.error}</div>`;
@@ -539,7 +522,6 @@ function fetchWeatherDataByISO(isoCode) {
 function fetchCurrencyDataByISO(isoCode) {
     console.log('Fetching currency data for:', isoCode);
     
-    // Show loading immediately
     document.getElementById('currencyModalContent').innerHTML = '<div class="text-center">Loading currency data...</div>';
     
     $.ajax({
@@ -556,15 +538,13 @@ function fetchCurrencyDataByISO(isoCode) {
                 return;
             }
 
-            let toCurrencyCode = 'USD'; // Default fallback
+            let toCurrencyCode = 'USD';
             
-            // Extract currency code safely
             if (data.currency && typeof data.currency === 'string') {
                 const currencyParts = data.currency.split(' / ');
                 if (currencyParts.length >= 3) {
                     toCurrencyCode = currencyParts[2];
                 } else {
-                    // Try to extract currency code from the string
                     const currencyMatch = data.currency.match(/[A-Z]{3}/);
                     if (currencyMatch) {
                         toCurrencyCode = currencyMatch[0];
@@ -600,7 +580,6 @@ function fetchCurrencyDataByISO(isoCode) {
 
             document.getElementById('currencyModalContent').innerHTML = currencyInfo;
             
-            // Load full currency options
             loadCurrencyOptions('USD', toCurrencyCode);
         },
         error: function (xhr, status, error) {
@@ -634,11 +613,9 @@ function loadCurrencyOptions(defaultFromCurrency, defaultToCurrency) {
             const fromDropdown = document.getElementById('from-currency');
             const toDropdown = document.getElementById('to-currency');
 
-            // Clear existing options
             fromDropdown.innerHTML = '';
             toDropdown.innerHTML = '';
 
-            // Populate dropdowns
             currencies.forEach(currency => {
                 const fromOption = document.createElement('option');
                 fromOption.value = currency;
@@ -657,17 +634,14 @@ function loadCurrencyOptions(defaultFromCurrency, defaultToCurrency) {
                 toDropdown.appendChild(toOption);
             });
 
-            // Setup conversion after dropdowns are populated
             setupAutomaticCurrencyConversion();
             
-            // Trigger initial conversion
             if (window.triggerInitialConversion) {
                 window.triggerInitialConversion();
             }
         },
         error: function (xhr, status, error) {
             console.error('Error loading currency options:', error);
-            // Fallback to basic currencies
             const basicCurrencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD'];
             const fromDropdown = document.getElementById('from-currency');
             const toDropdown = document.getElementById('to-currency');
@@ -710,7 +684,6 @@ function setupAutomaticCurrencyConversion() {
             return;
         }
 
-        // Show loading
         document.getElementById('conversion-result').textContent = 'Converting...';
 
         $.ajax({
@@ -750,15 +723,12 @@ function setupAutomaticCurrencyConversion() {
         });
     };
 
-    // Add event listeners
     conversionAmountInput.addEventListener('input', triggerConversion);
     fromCurrencyDropdown.addEventListener('change', triggerConversion);
     toCurrencyDropdown.addEventListener('change', triggerConversion);
 
-    // Store the function for initial call
     window.triggerInitialConversion = triggerConversion;
     
-    // Trigger initial conversion if amount is set
     if (parseFloat(conversionAmountInput.value) > 0) {
         triggerConversion();
     }
@@ -855,7 +825,6 @@ function fetchNewsByISO(isoCode) {
     });
 }
 
-// Modal management
 $('.modal').on('show.bs.modal', function () {
     if (activeModal && activeModal !== this) {
         $(activeModal).modal('hide');
@@ -869,7 +838,6 @@ $('.modal').on('hidden.bs.modal', function () {
     }
 });
 
-// Clean up on page unload
 window.addEventListener('beforeunload', function() {
     clearAllLayers();
     if (currentRequest) {
