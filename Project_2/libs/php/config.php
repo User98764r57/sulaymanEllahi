@@ -1,5 +1,5 @@
 <?php
-
+      
 	$cd_host = "(enter cd host)";
 	$cd_port = (enter cd port);
 	$cd_socket = "";
