@@ -56,6 +56,7 @@
     bottom: 0;
     z-index: 1060;
 }
+
 #countryModal .modal-header { background-color: #4CAF50; }
 #weatherModal .modal-header { background-color: #2196F3; }
 #currencyModal .modal-header { background-color: #FF9800; }
@@ -121,7 +122,6 @@
     height: 50px;
 }
 
-/* Currency Converter Styles */
 .currency-converter-container {
     width: 100%;
     max-width: 500px;
@@ -397,7 +397,6 @@ button {
     width: 100%;
 }
 
-/* Improve modal performance */
 .modal {
     backdrop-filter: blur(2px);
 }
