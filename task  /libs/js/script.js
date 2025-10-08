@@ -1,56 +1,87 @@
 $(document).ready(function() {
     const north = 44.1, south = -9.9, east = -22.4, west = 55.2;
 
-    $('#selEarthquakeDate').append('<option value="2011-03-11">2011-03-11</option>');
-    $('#selEarthquakeDate').append('<option value="2012-04-11">2012-04-11</option>');
-    $('#selEarthquakeDate').append('<option value="2007-09-12">2007-09-12</option>');
-    $('#selEarthquakeDate').append('<option value="2007-04-01">2007-04-01</option>');
-    $('#selEarthquakeDate').append('<option value="2019-05-26">2019-05-26</option>');
-    $('#selEarthquakeDate').append('<option value="2016-12-17">2016-12-17</option>');
-    $('#selEarthquakeDate').append('<option value="2017-01-22">2017-01-22</option>');
-    $('#selEarthquakeDate').append('<option value="2015-04-25">2015-04-25</option>');
+    // Cache DOM elements
+    const $earthquakeDate = $('#selEarthquakeDate');
+    const $cityCountry = $('#selCityCountry');
+    const $weatherStation = $('#selWeatherStation');
+    const $resultsTable = $('#resultsTable');
+    
+    // Pre-populate static data
+    const earthquakeDates = [
+        '2011-03-11', '2012-04-11', '2007-09-12', '2007-04-01',
+        '2019-05-26', '2016-12-17', '2017-01-22', '2015-04-25'
+    ];
+    
+    const cities = [
+        { value: 'Beijing', label: 'China' },
+        { value: 'Mexico City', label: 'Mexico' },
+        { value: 'Dhaka', label: 'Bangladesh' },
+        { value: 'Seoul', label: 'South Korea' },
+        { value: 'Jakarta', label: 'Indonesia' },
+        { value: 'Tokyo', label: 'Japan' },
+        { value: 'Hanoi', label: 'Vietnam' },
+        { value: 'Taipei', label: 'Taiwan' },
+        { value: 'Bogotá', label: 'Columbia' }
+    ];
 
-    $('#selCityCountry').append('<option value="Beijing">China</option>');
-    $('#selCityCountry').append('<option value="Mexico City">Mexico</option>');
-    $('#selCityCountry').append('<option value="Dhaka">Bangladesh</option>');
-    $('#selCityCountry').append('<option value="Seoul">South Korea</option>');
-    $('#selCityCountry').append('<option value="Jakarta">Indonesia</option>');
-    $('#selCityCountry').append('<option value="Tokyo">Japan</option>');
-    $('#selCityCountry').append('<option value="Hanoi">Vietnam</option>');
-    $('#selCityCountry').append('<option value="Taipei">Taiwan</option>');
-    $('#selCityCountry').append('<option value="Bogotá">Columbia</option>');
+    // Populate dropdowns efficiently
+    earthquakeDates.forEach(date => {
+        $earthquakeDate.append(`<option value="${date}">${date}</option>`);
+    });
+
+    cities.forEach(city => {
+        $cityCountry.append(`<option value="${city.value}">${city.label}</option>`);
+    });
+
+    function showLoading() {
+        $resultsTable.html('<div class="text-center p-4"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+    }
+
+    function showError(message) {
+        $resultsTable.html(`<div class="alert alert-danger">${message}</div>`);
+    }
 
     function populateWeatherStations() {
+        showLoading();
+        
         $.ajax({
             url: 'libs/php/getWeather.php',
             type: 'POST',
             dataType: 'json',
             data: { north, south, east, west },
+            timeout: 15000, // 15 second timeout
             success: function(result) {
-                $('#selWeatherStation').empty();
+                $weatherStation.empty();
                 if (result.data && result.data.length > 0) {
                     result.data.forEach(station => {
-                        $('#selWeatherStation').append(`<option value="${station.stationName}">${station.stationName}</option>`);
+                        $weatherStation.append(`<option value="${station.stationName}">${station.stationName}</option>`);
                     });
                 } else {
-                    $('#selWeatherStation').append('<option>No stations available</option>');
+                    $weatherStation.append('<option>No stations available</option>');
                 }
+                $resultsTable.empty();
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 console.log('Error:', textStatus, errorThrown);
+                showError('Failed to load weather stations. Please try again.');
             }
         });
     }
 
     populateWeatherStations();
 
+    // Event handlers with loading states
     $('#btnRunWeather').click(function() {
-        const selectedStation = $('#selWeatherStation').val();
+        const selectedStation = $weatherStation.val();
+        showLoading();
+        
         $.ajax({
             url: 'libs/php/getWeather.php',
             type: 'POST',
             dataType: 'json',
             data: { north, south, east, west },
+            timeout: 15000,
             success: function(result) {
                 let resultsHTML = `
                     <thead>
@@ -62,8 +93,8 @@ $(document).ready(function() {
                         </tr>
                     </thead>
                     <tbody>`;
+                
                 if (result.data && result.data.length > 0) {
-                    // Filter the result to show only the selected station
                     const stationData = result.data.find(station => station.stationName === selectedStation);
                     if (stationData) {
                         resultsHTML += `
@@ -80,21 +111,25 @@ $(document).ready(function() {
                     resultsHTML += '<tr><td colspan="4">No data available</td></tr>';
                 }
                 resultsHTML += '</tbody>';
-                $('#resultsTable').html(resultsHTML);
+                $resultsTable.html(resultsHTML);
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 console.log('Error:', textStatus, errorThrown);
+                showError('Failed to load weather data. Please try again.');
             }
         });
     });
 
     $('#btnRunEarthquake').click(function() {
-        const selectedDate = $('#selEarthquakeDate').val();
+        const selectedDate = $earthquakeDate.val();
+        showLoading();
+        
         $.ajax({
             url: 'libs/php/getEarthquakes.php',
             type: 'POST',
             dataType: 'json',
             data: { north, south, east, west, date: selectedDate },
+            timeout: 15000,
             success: function(result) {
                 let resultsHTML = `
                     <thead>
@@ -106,37 +141,41 @@ $(document).ready(function() {
                         </tr>
                     </thead>
                     <tbody>`;
-                // Filter and display only the earthquakes for the selected date
-                const filteredData = result.data.filter(eq => eq.datetime.split(' ')[0] === selectedDate);
+                
+                const filteredData = result.data.filter(eq => eq.datetime && eq.datetime.split(' ')[0] === selectedDate);
                 if (filteredData.length > 0) {
                     filteredData.forEach(eq => {
                         resultsHTML += `
                             <tr>
-                                <td>${eq.datetime}</td>
-                                <td>${eq.magnitude}</td>
-                                <td>${eq.depth}</td>
-                                <td>${eq.src}</td>
+                                <td>${eq.datetime || 'N/A'}</td>
+                                <td>${eq.magnitude || 'N/A'}</td>
+                                <td>${eq.depth || 'N/A'}</td>
+                                <td>${eq.src || 'N/A'}</td>
                             </tr>`;
                     });
                 } else {
                     resultsHTML += '<tr><td colspan="4">No data available for the selected date</td></tr>';
                 }
                 resultsHTML += '</tbody>';
-                $('#resultsTable').html(resultsHTML);
+                $resultsTable.html(resultsHTML);
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 console.log('Error:', textStatus, errorThrown);
+                showError('Failed to load earthquake data. Please try again.');
             }
         });
     });
 
     $('#btnRunCity').click(function() {
-        const selectedCity = $('#selCityCountry').val();
+        const selectedCity = $cityCountry.val();
+        showLoading();
+        
         $.ajax({
             url: 'libs/php/getCities.php',
             type: 'POST',
             dataType: 'json',
             data: { north, south, east, west, city: selectedCity },
+            timeout: 15000,
             success: function(result) {
                 let resultsHTML = `
                     <thead>
@@ -148,20 +187,26 @@ $(document).ready(function() {
                         </tr>
                     </thead>
                     <tbody>`;
-                result.data.forEach(city => {
-                    resultsHTML += `
-                        <tr>
-                            <td>${city.name}</td>
-                            <td>${city.population}</td>
-                            <td>${city.lat}</td>
-                            <td>${city.lng}</td>
-                        </tr>`;
-                });
+                
+                if (result.data && result.data.length > 0) {
+                    result.data.forEach(city => {
+                        resultsHTML += `
+                            <tr>
+                                <td>${city.name || 'N/A'}</td>
+                                <td>${city.population || 'N/A'}</td>
+                                <td>${city.lat || 'N/A'}</td>
+                                <td>${city.lng || 'N/A'}</td>
+                            </tr>`;
+                    });
+                } else {
+                    resultsHTML += '<tr><td colspan="4">No data available for the selected city</td></tr>';
+                }
                 resultsHTML += '</tbody>';
-                $('#resultsTable').html(resultsHTML);
+                $resultsTable.html(resultsHTML);
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 console.log('Error:', textStatus, errorThrown);
+                showError('Failed to load city data. Please try again.');
             }
         });
     });
