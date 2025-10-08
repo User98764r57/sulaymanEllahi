@@ -7,7 +7,7 @@
  * @version 1.2.1
  */
 .extra-marker {
-    background: url("../img/markers_default.png") no-repeat 0 0;
+    background: url("../img/markers_default.png") no-repeat 0 0; 
     width: 35px;
     height: 46px;
     position: absolute;
