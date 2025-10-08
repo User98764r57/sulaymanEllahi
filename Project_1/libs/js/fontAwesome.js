@@ -4,7 +4,7 @@
  * Copyright 2024 Fonticons, Inc.
  */
 (function () {
-    'use strict';
+    'use strict';  
   
     function _defineProperty(e, r, t) {
       return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
