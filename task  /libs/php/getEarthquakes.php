@@ -1,5 +1,4 @@
 <?php
-// Remove for production
 ini_set('display_errors', 'On');
 error_reporting(E_ALL);
 
@@ -7,11 +6,9 @@ $executionStartTime = microtime(true);
 
 $date = $_REQUEST['date'];
 
-// Cache configuration
 $cacheFile = 'cache/earthquakes_' . md5($_REQUEST['north'] . $_REQUEST['south'] . $_REQUEST['east'] . $_REQUEST['west']) . '.json';
-$cacheTime = 600; // 10 minutes cache for earthquakes
+$cacheTime = 600;
 
-// Try to serve from cache first
 if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTime) {
     $result = file_get_contents($cacheFile);
     $decode = json_decode($result, true);
@@ -29,7 +26,6 @@ if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTime) {
 
     $decode = json_decode($result, true);
 
-    // Cache the successful response
     if ($decode !== null && isset($decode['earthquakes'])) {
         file_put_contents($cacheFile, $result);
     }
