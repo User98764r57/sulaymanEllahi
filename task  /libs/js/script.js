@@ -1,13 +1,11 @@
 $(document).ready(function() {
     const north = 44.1, south = -9.9, east = -22.4, west = 55.2;
 
-    // Cache DOM elements
     const $earthquakeDate = $('#selEarthquakeDate');
     const $cityCountry = $('#selCityCountry');
     const $weatherStation = $('#selWeatherStation');
     const $resultsTable = $('#resultsTable');
     
-    // Pre-populate static data
     const earthquakeDates = [
         '2011-03-11', '2012-04-11', '2007-09-12', '2007-04-01',
         '2019-05-26', '2016-12-17', '2017-01-22', '2015-04-25'
@@ -25,7 +23,6 @@ $(document).ready(function() {
         { value: 'Bogotá', label: 'Columbia' }
     ];
 
-    // Populate dropdowns efficiently
     earthquakeDates.forEach(date => {
         $earthquakeDate.append(`<option value="${date}">${date}</option>`);
     });
@@ -50,7 +47,7 @@ $(document).ready(function() {
             type: 'POST',
             dataType: 'json',
             data: { north, south, east, west },
-            timeout: 15000, // 15 second timeout
+            timeout: 15000,
             success: function(result) {
                 $weatherStation.empty();
                 if (result.data && result.data.length > 0) {
@@ -71,7 +68,6 @@ $(document).ready(function() {
 
     populateWeatherStations();
 
-    // Event handlers with loading states
     $('#btnRunWeather').click(function() {
         const selectedStation = $weatherStation.val();
         showLoading();
