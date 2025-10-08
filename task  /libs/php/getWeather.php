@@ -1,15 +1,12 @@
 <?php
-// Remove for production
 ini_set('display_errors', 'On');
 error_reporting(E_ALL);
 
 $executionStartTime = microtime(true);
 
-// Cache configuration
 $cacheFile = 'cache/weather_' . md5($_REQUEST['north'] . $_REQUEST['south'] . $_REQUEST['east'] . $_REQUEST['west']) . '.json';
-$cacheTime = 300; // 5 minutes cache
+$cacheTime = 300;
 
-// Try to serve from cache first
 if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTime) {
     $result = file_get_contents($cacheFile);
     $decode = json_decode($result, true);
@@ -20,14 +17,13 @@ if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTime) {
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 10); // 10 second timeout
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 
     $result = curl_exec($ch);
     curl_close($ch);
 
     $decode = json_decode($result, true);
 
-    // Cache the successful response
     if ($decode !== null && isset($decode['weatherObservations'])) {
         file_put_contents($cacheFile, $result);
     }
