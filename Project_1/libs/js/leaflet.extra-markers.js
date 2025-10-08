@@ -4,7 +4,7 @@
  * Leaflet ExtraMarkers
  * https://github.com/coryasilva/Leaflet.ExtraMarkers/
  * @author coryasilva <https://github.com/coryasilva>
- * @version 1.2.1
+ * @version 1.2.1 
  */
 
 !function(e, t) {
