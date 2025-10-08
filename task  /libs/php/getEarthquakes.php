@@ -1,27 +1,41 @@
 <?php
-
 // Remove for production
 ini_set('display_errors', 'On');
 error_reporting(E_ALL);
 
 $executionStartTime = microtime(true);
 
-$date = $_REQUEST['date'] ;
+$date = $_REQUEST['date'];
 
-$url = 'http://api.geonames.org/earthquakesJSON?formatted=true&north=' . $_REQUEST['north'] . '&south=' . $_REQUEST['south'] . '&east=' . $_REQUEST['east'] . '&west=' . $_REQUEST['west'] . '&username=(enter username/API Key)';
+// Cache configuration
+$cacheFile = 'cache/earthquakes_' . md5($_REQUEST['north'] . $_REQUEST['south'] . $_REQUEST['east'] . $_REQUEST['west']) . '.json';
+$cacheTime = 600; // 10 minutes cache for earthquakes
 
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_URL, $url);
+// Try to serve from cache first
+if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTime) {
+    $result = file_get_contents($cacheFile);
+    $decode = json_decode($result, true);
+} else {
+    $url = 'http://api.geonames.org/earthquakesJSON?formatted=true&north=' . $_REQUEST['north'] . '&south=' . $_REQUEST['south'] . '&east=' . $_REQUEST['east'] . '&west=' . $_REQUEST['west'] . '&username=sulayman2e';
 
-$result = curl_exec($ch);
-curl_close($ch);
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 
-$decode = json_decode($result, true);
+    $result = curl_exec($ch);
+    curl_close($ch);
+
+    $decode = json_decode($result, true);
+
+    // Cache the successful response
+    if ($decode !== null && isset($decode['earthquakes'])) {
+        file_put_contents($cacheFile, $result);
+    }
+}
 
 if ($date) {
-    
     $filteredData = array_filter($decode['earthquakes'], function($earthquake) use ($date) {
         return strpos($earthquake['datetime'], $date) === 0;
     });
@@ -37,3 +51,4 @@ $output['status']['returnedIn'] = intval((microtime(true) - $executionStartTime)
 
 header('Content-Type: application/json; charset=UTF-8');
 echo json_encode($output);
+?>
