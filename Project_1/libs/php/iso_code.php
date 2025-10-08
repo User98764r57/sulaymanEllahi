@@ -4,7 +4,7 @@ header('Content-Type: application/json');
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-$geojsonPath = '../js/countryBorders.geojson';
+$geojsonPath = '../js/countryBorders.geojson'; 
 if (!file_exists($geojsonPath)) {
     echo json_encode(['error' => "GeoJSON file not found."]);
     exit;
