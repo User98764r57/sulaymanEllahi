@@ -2,7 +2,7 @@
 header('Content-Type: application/json');
 
 if (isset($_GET['isoCode'])) {
-    $isoCode = $_GET['isoCode'];
+    $isoCode = $_GET['isoCode']; 
     $username = '(enter username/API Key)'; 
     $url = "http://api.geonames.org/searchJSON?country=$isoCode&maxRows=1000&username=$username";
 
