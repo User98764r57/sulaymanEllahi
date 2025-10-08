@@ -2,6 +2,13 @@ let marker = null;
 let userCountryLayer = null;
 let userLocationFound = false;
 let geoJsonLoaded = false;
+let currentRequest = null;
+let activeModal = null;
+
+// Remove bounds for horizontal scrolling, only restrict vertical extremes
+const southWest = L.latLng(-85, -Infinity); // Allow infinite horizontal scrolling
+const northEast = L.latLng(85, Infinity);   // Allow infinite horizontal scrolling
+const bounds = L.latLngBounds(southWest, northEast);
 
 function checkLoadingComplete() {
     if (userLocationFound && geoJsonLoaded) {
@@ -19,19 +26,29 @@ document.getElementById('preloader').style.display = 'flex';
 const map = L.map('map', {
     minZoom: 2,
     maxZoom: 18,
-    worldCopyJump: true,
+    worldCopyJump: true, // Enable horizontal wrapping
     inertia: true,
     inertiaDeceleration: 2000,
     zoomAnimation: true,
     zoomSnap: 1,
     zoomDelta: 5,
-    wheelPxPerZoomLevel: 120, 
-    zoomControl: true
+    wheelPxPerZoomLevel: 120,
+    zoomControl: true,
+    maxBounds: bounds,
+    maxBoundsViscosity: 0.5 // Less restrictive for better scrolling
 }).setView([20, 0], 2);
+
+// Set bounds but allow horizontal overflow
+map.setMaxBounds(bounds);
+
+// Remove the restrictive drag event listener that was preventing horizontal scrolling
+// map.on('drag', function() {
+//     map.panInsideBounds(bounds, { animate: false });
+// });
 
 const Streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors',
-    noWrap: false,
+    noWrap: false, // Allow horizontal wrapping
     tileSize: 256,
     updateWhenIdle: true,
     keepBuffer: 8,
@@ -42,7 +59,7 @@ const Streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 
 const Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
     attribution: 'Source: Esri, USGS, NOAA',
-    noWrap: false,
+    noWrap: false, // Allow horizontal wrapping
     tileSize: 256,
     updateWhenIdle: true,
     keepBuffer: 8,
@@ -51,6 +68,7 @@ const Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/re
     reuseTiles: true
 });
 
+// Rest of your script.js remains the same...
 const baseMaps = {
     "Streets": Streets,
     "Satellite": Esri_WorldImagery
@@ -63,21 +81,20 @@ const weatherClusterGroup = L.markerClusterGroup();
 
 const cityIcon = L.divIcon({
     className: 'custom-city-icon',
-    html: '<span style="font-size: 24px; color: blue;">🏙️</span>',
+    html: '<span style="font-size: 24px; color: blue;">&#x1F3D9;&#xFE0F</span>',
     iconSize: [30, 30],
     iconAnchor: [15, 30]
 });
 
 const weatherIcon = L.divIcon({
     className: 'custom-weather-icon',
-    html: '<span style="font-size: 24px; color: grey;">☁️</span>',
+    html: '<span style="font-size: 24px; color: grey;">&#x26C5;&#xFE0F</span>',
     iconSize: [30, 30],
     iconAnchor: [15, 30]
 });
 
 function populateCountryDropdown() {
     const dropdown = document.getElementById('countryDropdown');
-
 }
 
 function fetchCitiesByIsoCode(isoCode) {
@@ -120,9 +137,10 @@ function fetchAndAddWeatherMarkers(isoCode) {
                     const humidity = observation.humidity || 'N/A';
                     const stationName = observation.stationName || 'Unknown Station';
                     const datetime = observation.datetime || 'N/A';
-                    const formattedTemperature = numeral(temperature).format('0.0') + 'Â°C';
+                    const formattedTemperature = numeral(temperature).format('0.0') + '°C';
                     const formattedHumidity = numeral(humidity).format('0,0') + '%';
                     const formattedDateTime = new Date(datetime).toString('MMMM d, yyyy h:mm tt');
+
                     const marker = L.marker([lat, lng], { icon: weatherIcon })
                         .bindPopup(
                             `<b>${stationName}</b><br>
@@ -138,21 +156,47 @@ function fetchAndAddWeatherMarkers(isoCode) {
         .catch(() => {});
 }
 
-document.getElementById('countryDropdown').addEventListener('change', function () {
-    const selectedIsoCode = this.value;
-    if (selectedIsoCode) {
-        fetchCitiesByIsoCode(selectedIsoCode);
-        fetchAndAddWeatherMarkers(selectedIsoCode);
+// Improved country dropdown change handler
+document.getElementById('countryDropdown').addEventListener('change', function() {
+    const selectedISOCode = this.value;
+    
+    // Cancel any pending request
+    if (currentRequest) {
+        currentRequest.abort();
+    }
+    
+    if (selectedISOCode === "none") {
+        clearAllLayers();
+        if (previouslyHighlightedLayer) {
+            previouslyHighlightedLayer.setStyle({
+                fillColor: 'transparent',
+                fillOpacity: 0.5,
+                color: 'transparent'
+            });
+            previouslyHighlightedLayer = null;
+        }
     } else {
-        cityClusterGroup.clearLayers();
-        weatherClusterGroup.clearLayers();
+        fetchCountryDataByISO(selectedISOCode);
     }
 });
+
+// Function to clear all layers properly
+function clearAllLayers() {
+    cityClusterGroup.clearLayers();
+    weatherClusterGroup.clearLayers();
+    
+    // Clear any pending timeouts
+    const highestTimeoutId = setTimeout(() => {}, 0);
+    for (let i = 0; i < highestTimeoutId; i++) {
+        clearTimeout(i);
+    }
+}
 
 let geoJsonLayer;
 let previouslyHighlightedLayer = null;
 
-document.getElementById('infoButton').addEventListener('click', () => {
+// Improved modal button handlers
+document.getElementById('infoButton').addEventListener('click', function() {
     const isoCode = document.getElementById('countryDropdown').value;
     if (isoCode !== "none") {
         fetchCountryInformation(isoCode);
@@ -160,7 +204,7 @@ document.getElementById('infoButton').addEventListener('click', () => {
     }
 });
 
-document.getElementById('weatherButton').addEventListener('click', () => {
+document.getElementById('weatherButton').addEventListener('click', function() {
     const isoCode = document.getElementById('countryDropdown').value;
     if (isoCode !== "none") {
         fetchWeatherDataByISO(isoCode);
@@ -168,25 +212,30 @@ document.getElementById('weatherButton').addEventListener('click', () => {
     }
 });
 
-document.getElementById('currencyButton').addEventListener('click', () => {
+document.getElementById('currencyButton').addEventListener('click', function() {
     const isoCode = document.getElementById('countryDropdown').value;
     if (isoCode !== "none") {
         $('#currencyModal').modal('show');
+        // Load currency data when modal is shown
+        setTimeout(() => {
+            fetchCurrencyDataByISO(isoCode);
+        }, 100);
     }
 });
 
-$('#currencyModal').on('show.bs.modal', function () {
-    const isoCode = document.getElementById('countryDropdown').value;
-    if (isoCode !== "none") {
-        fetchCurrencyDataByISO(isoCode);
-    }
-});
-
-document.getElementById('wikiButton').addEventListener('click', () => {
+document.getElementById('wikiButton').addEventListener('click', function() {
     const isoCode = document.getElementById('countryDropdown').value;
     if (isoCode !== "none") {
         fetchWikipediaDataByISO(isoCode);
         $('#wikiModal').modal('show');
+    }
+});
+
+document.getElementById('newsButton').addEventListener('click', function() {
+    const isoCode = document.getElementById('countryDropdown').value;
+    if (isoCode !== "none") {
+        fetchNewsByISO(isoCode);
+        $('#newsModal').modal('show');
     }
 });
 
@@ -222,8 +271,9 @@ function highlightCountryOnMap(countryCode) {
 
 populateCountryDropdown();
 
-overlayMaps["Major Cities"] = cityClusterGroup;
-overlayMaps["Weather Stations"] = weatherClusterGroup;
+// Updated overlay names
+overlayMaps["Cities"] = cityClusterGroup;
+overlayMaps["Airports"] = weatherClusterGroup;
 
 L.control.layers(baseMaps, overlayMaps).addTo(map);
 Streets.addTo(map);
@@ -267,32 +317,22 @@ map.on('zoomend', function () {
     }
 });
 
-document.getElementById('countryDropdown').addEventListener('change', function() {
-    const selectedISOCode = this.value;
-
-    if (selectedISOCode === "none") {
-        if (previouslyHighlightedLayer) {
-            previouslyHighlightedLayer.setStyle({
-                fillColor: 'transparent',
-                fillOpacity: 0.5,
-                color: 'transparent' 
-            });
-            previouslyHighlightedLayer = null;
-        }
-    } else {
-        fetchCountryDataByISO(selectedISOCode);
-    }
-});
-
 function fetchCountryDataByISO(isoCode) {
-    $.ajax({
+    // Cancel any previous request
+    if (currentRequest) {
+        currentRequest.abort();
+    }
+    
+    currentRequest = $.ajax({
         url: 'libs/php/iso_code.php',
         type: 'GET',
         data: { iso_code: isoCode },
-        dataType: 'json', 
+        dataType: 'json',
         success: function(data) {
             if (data.country_code) {
                 highlightCountryOnMap(data.country_code);
+                fetchCitiesByIsoCode(isoCode);
+                fetchAndAddWeatherMarkers(isoCode);
             }
         },
         error: function() {}
@@ -305,7 +345,6 @@ function getUserLocationISO() {
             function (position) {
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
-
                 fetchISOCodeByCoordinates(lat, lng);
             },
             function () {}
@@ -333,7 +372,7 @@ function fetchISOCodeByCoordinates(lat, lng) {
 function setDropdownToUserCountry(isoCode) {
     const dropdown = document.getElementById('countryDropdown');
     dropdown.value = isoCode;
-    highlightCountryOnMap(isoCode); 
+    highlightCountryOnMap(isoCode);
     fetchCitiesByIsoCode(isoCode);
     fetchAndAddWeatherMarkers(isoCode);
 }
@@ -347,399 +386,516 @@ fetch('libs/js/countryBorders.geojson')
     })
     .then(data => {
         geoJsonLoaded = true;
-        checkLoadingComplete(); 
+        checkLoadingComplete();
     })
     .catch(() => {
         alert('Error loading GeoJSON file.');
-        checkLoadingComplete(); 
+        checkLoadingComplete();
     });
 
-    function showModal(modalId) {
-        document.getElementById(modalId).style.display = 'block';
-    }
-    
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
-    }
-    
-    function showModal(modalId) {
-        document.getElementById(modalId).style.display = 'block';
-    }
-    
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
-    }
+function showModal(modalId) {
+    document.getElementById(modalId).style.display = 'block';
+}
 
-    function fetchCountryInformation(isoCode) {
-        $.ajax({
-            url: 'libs/php/fetch_data.php',
-            type: 'GET',
-            data: { iso_code: isoCode },
-            dataType: 'json',
-            success: function (data) {
-                if (data.error) {
-                    alert(data.error);
-                    return;
-                }
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+function fetchCountryInformation(isoCode) {
+    // Clear previous content immediately
+    document.getElementById('countryModalContent').innerHTML = '<div class="text-center">Loading...</div>';
     
-                const countryInfo = `
-                    <div style="text-align: center; font-size: 48px;">
-                        ${data.flag || 'N/A'}
-                    </div>
-                    <table>
-                        <tr>
-                            <th>Name</th>
-                            <td>${data.country || 'N/A'}</td>
-                        </tr>
-                        <tr>
-                            <th>Capital City</th>
-                            <td>${data.capital || 'N/A'}</td>
-                        </tr>
-                        <tr>
-                            <th>Population</th>
-                            <td>${data.population ? numeral(data.population).format('0,0') : 'N/A'}</td>
-                        </tr>
-                        <tr>
-                            <th>Currency</th>
-                            <td>${data.currency || 'N/A'}</td>
-                        </tr>
-                        <tr>
-                            <th>Continent</th>
-                            <td>${data.continent || 'N/A'}</td>
-                        </tr>
-                        <tr>
-                            <th>Region</th>
-                            <td>${data.region || 'N/A'}</td>
-                        </tr>
-                        <tr>
-                            <th>Language/s</th>
-                            <td>${data.languages || 'N/A'}</td>
-                        </tr>
-                    </table>
-                `;
-    
-                document.getElementById('countryModalContent').innerHTML = countryInfo;
-                showModal('countryModal');
-            },
-            error: function () {
-                alert('Error fetching data from PHP.');
+    $.ajax({
+        url: 'libs/php/fetch_data.php',
+        type: 'GET',
+        data: { iso_code: isoCode },
+        dataType: 'json',
+        timeout: 10000, // 10 second timeout
+        success: function (data) {
+            if (data.error) {
+                document.getElementById('countryModalContent').innerHTML = `<div class="text-center text-danger">${data.error}</div>`;
+                return;
             }
-        });
-    }
     
-    function fetchWeatherDataByISO(isoCode) {
-        $.ajax({
-            url: 'libs/php/geo_weather.php',
-            type: 'GET',
-            data: { iso_code: isoCode },
-            dataType: 'json',
-            success: function (data) {
-                if (data.error) {
-                    alert(data.error);
-                    return;
-                }
+            const countryInfo = `
+                <div style="text-align: center; font-size: 48px;">
+                    ${data.flag || 'N/A'}
+                </div>
+                <table>
+                    <tr>
+                        <th>Name</th>
+                        <td>${data.country || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <th>Capital City</th>
+                        <td>${data.capital || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <th>Population</th>
+                        <td>${data.population ? numeral(data.population).format('0,0') : 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <th>Currency</th>
+                        <td>${data.currency || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <th>Continent</th>
+                        <td>${data.continent || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <th>Region</th>
+                        <td>${data.region || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <th>Language/s</th>
+                        <td>${data.languages || 'N/A'}</td>
+                    </tr>
+                </table>
+            `;
     
-                document.getElementById('weatherModalHeader').innerText = `${data.region}, ${data.country}`;
-    
-                let currentWeatherTable = `
-                    <table class="weather-table">
-                        <thead>
-                            <tr>
-                                <th colspan="3" class="weather-header">TODAY</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><img src="${data.current_weather.icon}" alt="${data.current_weather.description}" class="weather-icon" /></td>
-                                <td class="weather-description">${data.current_weather.description}</td>
-                                <td class="weather-temperature"><strong>${data.current_weather.temperature ? Math.round(data.current_weather.temperature) + 'Â°C' : 'N/A'}</strong></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                `;
-    
-                let forecastTables = data.forecast
-                    .map((forecast) => {
-                        const forecastDate = new Date(forecast.date);
-                        const options = { weekday: "long", month: "long", day: "numeric" };
-                        const formattedDate = forecastDate.toLocaleDateString("en-US", options);
-    
-                        return `
-                            <table class="weather-table">
-                                <thead>
-                                    <tr>
-                                        <th colspan="3" class="weather-header">${formattedDate}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td><img src="${forecast.icon}" alt="${forecast.description}" class="weather-icon" /></td>
-                                        <td class="weather-description">${forecast.description}</td>
-                                        <td class="weather-temperature"><strong>${forecast.temperature ? Math.round(forecast.temperature) + 'Â°C' : 'N/A'}</strong></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        `;
-                    })
-                    .join('');
-    
-                document.getElementById('weatherModalContent').innerHTML = currentWeatherTable + forecastTables;
-                showModal('weatherModal');
-            },
-            error: function () {
-                alert('Error fetching weather data.');
+            document.getElementById('countryModalContent').innerHTML = countryInfo;
+        },
+        error: function (xhr, status, error) {
+            let errorMessage = 'Error fetching data.';
+            if (status === 'timeout') {
+                errorMessage = 'Request timed out. Please try again.';
             }
-        });
-    }
-    
-    function fetchCurrencyDataByISO(isoCode) {
-        $.ajax({
-            url: 'libs/php/fetch_data.php',
-            type: 'GET',
-            data: { iso_code: isoCode },
-            dataType: 'json',
-            success: function (data) {
-                const fromCurrencyCode = 'USD';
-                const toCurrencyCode = data.currency.split(' / ')[2];
-    
-                const currencyInfo = `
-                    <table>
-                        <tr>
-                            <td class="currency-row">
-                                <input type="number" id="conversion-amount" placeholder="Amount" value="1" min="1">
-                                <div class="currency-selector">
-                                    <label for="from-currency">From</label>
-                                    <select id="from-currency"></select>
-                                </div>
-                                <div class="currency-selector">
-                                    <label for="to-currency">To</label>
-                                    <select id="to-currency"></select>
-                                </div>
-                                <span id="conversion-result">Result: --</span>
-                            </td>
-                        </tr>
-                    </table>
-                `;
-    
-                document.getElementById('currencyModalContent').innerHTML = currencyInfo;
-                showModal('currencyModal');
-    
-                loadCurrencyOptions(fromCurrencyCode).then(() => {
-                    const fromDropdown = document.getElementById('from-currency');
-                    const toDropdown = document.getElementById('to-currency');
-    
-                    fromDropdown.value = fromCurrencyCode;
-                    toDropdown.value = toCurrencyCode;
-    
-                    setupAutomaticCurrencyConversion();
-                    triggerInitialConversion();
-                });
-            },
-            error: function () {
-                alert('Error fetching currency data.');
-            }
-        });
-    }
-    
-    function loadCurrencyOptions(defaultCurrency) {
-        return new Promise((resolve, reject) => {
-            $.ajax({
-                url: 'libs/php/load_currency_options.php',
-                type: 'GET',
-                dataType: 'json',
-                success: function (data) {
-                    if (data.error) {
-                        alert(data.error);
-                        reject(data.error);
-                        return;
-                    }
-    
-                    const currencies = data.currencies;
-                    const fromDropdown = document.getElementById('from-currency');
-                    const toDropdown = document.getElementById('to-currency');
-    
-                    currencies.forEach(currency => {
-                        const option = `<option value="${currency}" ${currency === defaultCurrency ? 'selected' : ''}>${currency}</option>`;
-                        fromDropdown.insertAdjacentHTML('beforeend', option);
-                        toDropdown.insertAdjacentHTML('beforeend', option);
-                    });
-    
-                    resolve();
-                },
-                error: function () {
-                    alert("Error loading currency options.");
-                    reject();
-                }
-            });
-        });
-    }
-    
-    function setupAutomaticCurrencyConversion() {
-        const conversionAmountInput = document.getElementById('conversion-amount');
-        const fromCurrencyDropdown = document.getElementById('from-currency');
-        const toCurrencyDropdown = document.getElementById('to-currency');
-    
-        const triggerConversion = () => {
-            const fromCurrency = fromCurrencyDropdown.value;
-            const toCurrency = toCurrencyDropdown.value;
-            const amount = conversionAmountInput.value || 1;
-    
-            $.ajax({
-                url: 'libs/php/fetch_data.php',
-                type: 'GET',
-                data: { from: fromCurrency, to: toCurrency, amount: amount },
-                dataType: 'json',
-                success: function (response) {
-                    if (response.error) {
-                        alert(response.error);
-                    } else {
-                        updateConversionResult(response.convertedAmount);
-                    }
-                },
-                error: function () {
-                    alert('Error fetching currency conversion.');
-                }
-            });
-        };
-    
-        conversionAmountInput.addEventListener('input', triggerConversion);
-        fromCurrencyDropdown.addEventListener('change', triggerConversion);
-        toCurrencyDropdown.addEventListener('change', triggerConversion);
-    
-        window.triggerInitialConversion = triggerConversion; 
-    }
-    
-    function updateConversionResult(rate) {
-        const resultElement = document.getElementById('conversion-result');
-    
-        if (rate && !isNaN(rate)) {
-            resultElement.textContent = `Result: ${numeral(rate).format('0,0.00')}`;
-        } else {
-            resultElement.textContent = 'Result: --';
+            document.getElementById('countryModalContent').innerHTML = `<div class="text-center text-danger">${errorMessage}</div>`;
         }
-    }    
+    });
+}
+
+function fetchWeatherDataByISO(isoCode) {
+    document.getElementById('weatherModalContent').innerHTML = '<div class="text-center">Loading...</div>';
     
-    function fetchWikipediaDataByISO(isoCode) {
+    $.ajax({
+        url: 'libs/php/geo_weather.php',
+        type: 'GET',
+        data: { iso_code: isoCode },
+        dataType: 'json',
+        timeout: 10000,
+        success: function (data) {
+            if (data.error) {
+                document.getElementById('weatherModalContent').innerHTML = `<div class="text-center text-danger">${data.error}</div>`;
+                return;
+            }
+    
+            document.getElementById('weatherModalHeader').innerText = `${data.region}, ${data.country}`;
+    
+            let currentWeatherTable = `
+                <table class="weather-table">
+                    <thead>
+                        <tr>
+                            <th colspan="3" class="weather-header">CURRENT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><img src="${data.current_weather.icon}" alt="${data.current_weather.description}" class="weather-icon" /></td>
+                            <td class="weather-description">${data.current_weather.description}</td>
+                            <td class="weather-temperature"><strong>${data.current_weather.temperature ? Math.round(data.current_weather.temperature) + '°C' : 'N/A'}</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+    
+            let forecastTables = data.forecast
+                .map((forecast) => {
+                    const forecastDate = new Date(forecast.date);
+                    const options = { weekday: "long", month: "long", day: "numeric" };
+                    const formattedDate = forecastDate.toLocaleDateString("en-US", options);
+    
+                    return `
+                        <table class="weather-table">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" class="weather-header">${formattedDate}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><img src="${forecast.icon}" alt="${forecast.description}" class="weather-icon" /></td>
+                                    <td class="weather-description">${forecast.description}</td>
+                                    <td class="weather-temperature"><strong>${forecast.temperature ? Math.round(forecast.temperature) + '°C' : 'N/A'}</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    `;
+                })
+                .join('');
+    
+            document.getElementById('weatherModalContent').innerHTML = currentWeatherTable + forecastTables;
+        },
+        error: function (xhr, status, error) {
+            let errorMessage = 'Error fetching weather data.';
+            if (status === 'timeout') {
+                errorMessage = 'Weather request timed out. Please try again.';
+            }
+            document.getElementById('weatherModalContent').innerHTML = `<div class="text-center text-danger">${errorMessage}</div>`;
+        }
+    });
+}
+
+function fetchCurrencyDataByISO(isoCode) {
+    console.log('Fetching currency data for:', isoCode);
+    
+    // Show loading immediately
+    document.getElementById('currencyModalContent').innerHTML = '<div class="text-center">Loading currency data...</div>';
+    
+    $.ajax({
+        url: 'libs/php/fetch_data.php',
+        type: 'GET',
+        data: { iso_code: isoCode },
+        dataType: 'json',
+        timeout: 10000,
+        success: function (data) {
+            console.log('Currency data received:', data);
+            
+            if (data.error) {
+                document.getElementById('currencyModalContent').innerHTML = `<div class="text-center text-danger">${data.error}</div>`;
+                return;
+            }
+
+            let toCurrencyCode = 'USD'; // Default fallback
+            
+            // Extract currency code safely
+            if (data.currency && typeof data.currency === 'string') {
+                const currencyParts = data.currency.split(' / ');
+                if (currencyParts.length >= 3) {
+                    toCurrencyCode = currencyParts[2];
+                } else {
+                    // Try to extract currency code from the string
+                    const currencyMatch = data.currency.match(/[A-Z]{3}/);
+                    if (currencyMatch) {
+                        toCurrencyCode = currencyMatch[0];
+                    }
+                }
+            }
+            
+            console.log('Target currency code:', toCurrencyCode);
+
+            const currencyInfo = `
+                <div class="currency-converter-container">
+                    <div class="currency-input-group">
+                        <label for="conversion-amount">Amount:</label>
+                        <input type="number" id="conversion-amount" placeholder="Enter amount" value="1" min="0" step="0.01" class="form-control">
+                    </div>
+                    <div class="currency-selector-group">
+                        <div class="currency-selector">
+                            <label for="from-currency">From:</label>
+                            <select id="from-currency" class="form-select">
+                                <option value="USD">USD - US Dollar</option>
+                            </select>
+                        </div>
+                        <div class="currency-selector">
+                            <label for="to-currency">To:</label>
+                            <select id="to-currency" class="form-select">
+                                <option value="${toCurrencyCode}">${toCurrencyCode}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="conversion-result" class="conversion-result">Enter amount to convert</div>
+                </div>
+            `;
+
+            document.getElementById('currencyModalContent').innerHTML = currencyInfo;
+            
+            // Load full currency options
+            loadCurrencyOptions('USD', toCurrencyCode);
+        },
+        error: function (xhr, status, error) {
+            console.error('Currency data error:', error);
+            let errorMessage = 'Error fetching currency data.';
+            if (status === 'timeout') {
+                errorMessage = 'Currency request timed out. Please try again.';
+            }
+            document.getElementById('currencyModalContent').innerHTML = `<div class="text-center text-danger">${errorMessage}</div>`;
+        }
+    });
+}
+
+function loadCurrencyOptions(defaultFromCurrency, defaultToCurrency) {
+    console.log('Loading currency options...');
+    
+    $.ajax({
+        url: 'libs/php/load_currency_options.php',
+        type: 'GET',
+        dataType: 'json',
+        timeout: 10000,
+        success: function (data) {
+            console.log('Currency options received:', data);
+            
+            if (data.error) {
+                console.error('Currency options error:', data.error);
+                return;
+            }
+
+            const currencies = data.currencies || [];
+            const fromDropdown = document.getElementById('from-currency');
+            const toDropdown = document.getElementById('to-currency');
+
+            // Clear existing options
+            fromDropdown.innerHTML = '';
+            toDropdown.innerHTML = '';
+
+            // Populate dropdowns
+            currencies.forEach(currency => {
+                const fromOption = document.createElement('option');
+                fromOption.value = currency;
+                fromOption.textContent = currency;
+                if (currency === defaultFromCurrency) {
+                    fromOption.selected = true;
+                }
+                fromDropdown.appendChild(fromOption);
+                
+                const toOption = document.createElement('option');
+                toOption.value = currency;
+                toOption.textContent = currency;
+                if (currency === defaultToCurrency) {
+                    toOption.selected = true;
+                }
+                toDropdown.appendChild(toOption);
+            });
+
+            // Setup conversion after dropdowns are populated
+            setupAutomaticCurrencyConversion();
+            
+            // Trigger initial conversion
+            if (window.triggerInitialConversion) {
+                window.triggerInitialConversion();
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error('Error loading currency options:', error);
+            // Fallback to basic currencies
+            const basicCurrencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD'];
+            const fromDropdown = document.getElementById('from-currency');
+            const toDropdown = document.getElementById('to-currency');
+
+            basicCurrencies.forEach(currency => {
+                const fromOption = document.createElement('option');
+                fromOption.value = currency;
+                fromOption.textContent = currency;
+                fromDropdown.appendChild(fromOption);
+                
+                const toOption = document.createElement('option');
+                toOption.value = currency;
+                toOption.textContent = currency;
+                toDropdown.appendChild(toOption);
+            });
+
+            setupAutomaticCurrencyConversion();
+        }
+    });
+}
+
+function setupAutomaticCurrencyConversion() {
+    const conversionAmountInput = document.getElementById('conversion-amount');
+    const fromCurrencyDropdown = document.getElementById('from-currency');
+    const toCurrencyDropdown = document.getElementById('to-currency');
+
+    const triggerConversion = () => {
+        const fromCurrency = fromCurrencyDropdown.value;
+        const toCurrency = toCurrencyDropdown.value;
+        const amount = parseFloat(conversionAmountInput.value) || 0;
+
+        if (amount <= 0) {
+            document.getElementById('conversion-result').textContent = 'Enter amount to convert';
+            return;
+        }
+
+        if (fromCurrency === toCurrency) {
+            document.getElementById('conversion-result').textContent = 
+                `${numeral(amount).format('0,0.00')} ${fromCurrency} = ${numeral(amount).format('0,0.00')} ${toCurrency}`;
+            return;
+        }
+
+        // Show loading
+        document.getElementById('conversion-result').textContent = 'Converting...';
+
         $.ajax({
             url: 'libs/php/fetch_data.php',
             type: 'GET',
-            data: { iso_code: isoCode },
+            data: { 
+                from: fromCurrency, 
+                to: toCurrency, 
+                amount: amount 
+            },
             dataType: 'json',
-            success: function (data) {
-                const wikiLinks = data.wikiTitles || [];
-    
-                if (wikiLinks.length > 0) {
-                    let wikiLinksHtml = '';
-                    wikiLinks.forEach(wikiItem => {
-                        const wikiUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(wikiItem.title)}`;
-                        wikiLinksHtml += `
-                            <div class="wiki-row">
-                                <div class="wiki-link">
-                                    <a href="${wikiUrl}" target="_blank">${wikiItem.title}</a>
-                                </div>
-                                <div class="wiki-summary">
-                                    <p>${wikiItem.summary}</p>
-                                </div>
-                                <div class="wiki-image">
-                                    <img src="${wikiItem.thumbnailImg}" alt="${wikiItem.title}" />
-                                </div>
-                            </div>
-                        `;
-                    });
-    
-                    document.getElementById('wikiModalContent').innerHTML = wikiLinksHtml;
-                    showModal('wikiModal');
+            timeout: 10000,
+            success: function (response) {
+                console.log('Conversion response:', response);
+                if (response.error) {
+                    document.getElementById('conversion-result').textContent = 'Error: ' + response.error;
+                    document.getElementById('conversion-result').className = 'conversion-result error';
+                } else if (response.convertedAmount) {
+                    const converted = parseFloat(response.convertedAmount);
+                    document.getElementById('conversion-result').textContent = 
+                        `${numeral(amount).format('0,0.00')} ${fromCurrency} = ${numeral(converted).format('0,0.00')} ${toCurrency}`;
+                    document.getElementById('conversion-result').className = 'conversion-result success';
                 } else {
-                    document.getElementById('wikiModalContent').innerHTML = '<div>No Wikipedia links found</div>';
-                    showModal('wikiModal');
+                    document.getElementById('conversion-result').textContent = 'Error: Invalid response';
+                    document.getElementById('conversion-result').className = 'conversion-result error';
                 }
             },
-            error: function () {
-                alert('Error fetching Wikipedia data.');
+            error: function (xhr, status, error) {
+                console.error('Conversion error:', error);
+                let errorMessage = 'Conversion error';
+                if (status === 'timeout') {
+                    errorMessage = 'Conversion request timed out';
+                }
+                document.getElementById('conversion-result').textContent = 'Error: ' + errorMessage;
+                document.getElementById('conversion-result').className = 'conversion-result error';
             }
         });
+    };
+
+    // Add event listeners
+    conversionAmountInput.addEventListener('input', triggerConversion);
+    fromCurrencyDropdown.addEventListener('change', triggerConversion);
+    toCurrencyDropdown.addEventListener('change', triggerConversion);
+
+    // Store the function for initial call
+    window.triggerInitialConversion = triggerConversion;
+    
+    // Trigger initial conversion if amount is set
+    if (parseFloat(conversionAmountInput.value) > 0) {
+        triggerConversion();
     }
+}
+
+function fetchWikipediaDataByISO(isoCode) {
+    document.getElementById('wikiModalContent').innerHTML = '<div class="text-center">Loading...</div>';
     
-    function fetchNewsByISO(isoCode) {
-        $.ajax({
-            url: 'libs/php/fetch_news.php',
-            type: 'GET',
-            data: { iso_code: isoCode },
-            dataType: 'json',
-            success: function (data) {
-                if (data.error) {
-                    alert(data.error);
-                    return;
-                }
+    $.ajax({
+        url: 'libs/php/fetch_data.php',
+        type: 'GET',
+        data: { iso_code: isoCode },
+        dataType: 'json',
+        timeout: 10000,
+        success: function (data) {
+            const wikiLinks = data.wikiTitles || [];
     
-                let newsHtml = '';
-    
-                data.forEach(news => {
-                    newsHtml += `
-                        <div class="news-item">
-                            <img src="${news.image}" alt="News Image" class="news-image">
-                            <div class="news-content">
-                                <a href="${news.url}" target="_blank" class="news-title">
-                                    ${news.title}
-                                </a>
-                                <p class="news-domain">
-                                    ${news.domain}
-                                </p>
+            if (wikiLinks.length > 0) {
+                let wikiLinksHtml = '';
+                wikiLinks.forEach(wikiItem => {
+                    const wikiUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(wikiItem.title)}`;
+                    wikiLinksHtml += `
+                        <div class="wiki-row">
+                            <div class="wiki-link">
+                                <a href="${wikiUrl}" target="_blank">${wikiItem.title}</a>
+                            </div>
+                            <div class="wiki-summary">
+                                <p>${wikiItem.summary}</p>
+                            </div>
+                            <div class="wiki-image">
+                                <img src="${wikiItem.thumbnailImg}" alt="${wikiItem.title}" />
                             </div>
                         </div>
                     `;
                 });
     
-                document.getElementById('newsModalContent').innerHTML = newsHtml;
-                showModal('newsModal');
+                document.getElementById('wikiModalContent').innerHTML = wikiLinksHtml;
+            } else {
+                document.getElementById('wikiModalContent').innerHTML = '<div class="text-center">No Wikipedia links found</div>';
+            }
+        },
+        error: function (xhr, status, error) {
+            let errorMessage = 'Error fetching Wikipedia data.';
+            if (status === 'timeout') {
+                errorMessage = 'Wikipedia request timed out. Please try again.';
+            }
+            document.getElementById('wikiModalContent').innerHTML = `<div class="text-center text-danger">${errorMessage}</div>`;
+        }
+    });
+}
+
+function fetchNewsByISO(isoCode) {
+    document.getElementById('newsModalContent').innerHTML = '<div class="text-center">Loading...</div>';
+    
+    $.ajax({
+        url: 'libs/php/fetch_news.php',
+        type: 'GET',
+        data: { iso_code: isoCode },
+        dataType: 'json',
+        timeout: 10000,
+        success: function (data) {
+            if (data.error) {
+                document.getElementById('newsModalContent').innerHTML = `<div class="text-center text-danger">${data.error}</div>`;
+                return;
+            }
+    
+            let newsHtml = '';
+    
+            data.forEach(news => {
+                newsHtml += `
+                    <div class="news-item">
+                        <img src="${news.image}" alt="News Image" class="news-image">
+                        <div class="news-content">
+                            <a href="${news.url}" target="_blank" class="news-title">
+                                ${news.title}
+                            </a>
+                            <p class="news-domain">
+                                ${news.domain}
+                            </p>
+                        </div>
+                    </div>
+                `;
+            });
+    
+            document.getElementById('newsModalContent').innerHTML = newsHtml;
+        },
+        error: function (xhr, status, error) {
+            let errorMessage = 'Error fetching news.';
+            if (status === 'timeout') {
+                errorMessage = 'News request timed out. Please try again.';
+            }
+            document.getElementById('newsModalContent').innerHTML = `<div class="text-center text-danger">${errorMessage}</div>`;
+        }
+    });
+}
+
+// Modal management
+$('.modal').on('show.bs.modal', function () {
+    if (activeModal && activeModal !== this) {
+        $(activeModal).modal('hide');
+    }
+    activeModal = this;
+});
+
+$('.modal').on('hidden.bs.modal', function () {
+    if (activeModal === this) {
+        activeModal = null;
+    }
+});
+
+// Clean up on page unload
+window.addEventListener('beforeunload', function() {
+    clearAllLayers();
+    if (currentRequest) {
+        currentRequest.abort();
+    }
+});
+
+function getUserLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            function (position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                userLocationFound = true;
+                checkLoadingComplete();
             },
-            error: function () {
-                alert('Error fetching news.');
+            function () {
+                userLocationFound = true;
+                checkLoadingComplete();
             }
-        });
+        );
+    } else {
+        userLocationFound = true;
+        checkLoadingComplete();
     }
-    
-     document.getElementById('newsButton').addEventListener('click', () => {
-            const isoCode = document.getElementById('countryDropdown').value;
-            if (isoCode !== "none") {
-                fetchNewsByISO(isoCode);
-                $('#newsModal').modal('show');
-            }
-        });
-        
-        function showModal(modalId) {
-            document.getElementById(modalId).style.display = 'block';
-        }
-        
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-    
-    function getUserLocation() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                function (position) {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-    
-                    userLat = lat;
-                    userLng = lng;
-                    userLocationFound = true;
-                    checkLoadingComplete();
-                },
-                function () {
-                    alert('Unable to retrieve your location. Showing default map view.');
-                    userLocationFound = true;
-                    checkLoadingComplete();
-                }
-            );
-        } else {
-            alert("Geolocation is not supported by this browser.");
-            userLocationFound = true;
-            checkLoadingComplete();
-        }
-    }
-    
-    getUserLocation();
-        
-    
+}
+
+getUserLocation();
