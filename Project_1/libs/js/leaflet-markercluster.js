@@ -1,7 +1,7 @@
 !function(e, t) {
     "object" == typeof exports && "undefined" != typeof module ? t(exports) : "function" == typeof define && define.amd ? define(["exports"], t) : t(((e = e || self).Leaflet = e.Leaflet || {}, e.Leaflet.markercluster = {}))
 }(this, function(e) {
-    "use strict";
+    "use strict"; 
     var t = L.MarkerClusterGroup = L.FeatureGroup.extend({
         options: {
             maxClusterRadius: 80,
