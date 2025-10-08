@@ -2,7 +2,7 @@
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', 1); 
 
 $exchangeApiKey = '(enter username/API Key)'; 
 $url = "https://v6.exchangerate-api.com/v6/{$exchangeApiKey}/codes";
