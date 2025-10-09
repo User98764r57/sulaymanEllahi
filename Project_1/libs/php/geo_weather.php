@@ -1,9 +1,9 @@
 <?php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
- 
-$geonamesUsername = "(enter username/API Key)";
-$weatherApiKey = "(enter username/API Key)";
+
+$geonamesUsername = "";
+$weatherApiKey = "";
 
 header('Content-Type: application/json');
 
@@ -25,18 +25,19 @@ if (isset($_GET['iso_code'])) {
     }
 
     $capitalCity = $geoData['geonames'][0]['capital'];
-    $weatherUrl = "http://api.weatherapi.com/v1/forecast.json?q=$capitalCity&days=4&key=$weatherApiKey";
+    $encodedCapitalCity = urlencode($capitalCity);
+    $weatherUrl = "http://api.weatherapi.com/v1/forecast.json?q=$encodedCapitalCity&days=4&key=$weatherApiKey";
     $weatherResponse = file_get_contents($weatherUrl);
 
     if ($weatherResponse === false) {
-        echo json_encode(['error' => 'Failed to fetch data from Weather API.']);
+        echo json_encode(['error' => 'Failed to fetch data from Weather API for ' . $capitalCity]);
         exit;
     }
 
     $weatherData = json_decode($weatherResponse, true);
 
     if (!isset($weatherData['location'])) {
-        echo json_encode(['error' => 'Invalid response from Weather API.']);
+        echo json_encode(['error' => 'Invalid response from Weather API for ' . $capitalCity]);
         exit;
     }
 
