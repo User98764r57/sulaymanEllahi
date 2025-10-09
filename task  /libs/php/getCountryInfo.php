@@ -4,16 +4,16 @@ error_reporting(E_ALL);
 
 $executionStartTime = microtime(true);
 
-$countryCode = $_REQUEST['countryCode'];
+$cityName = $_REQUEST['cityName'];
 
-$cacheFile = 'cache/country_' . md5($countryCode) . '.json';
+$cacheFile = 'cache/country_' . md5($cityName) . '.json';
 $cacheTime = 86400;
 
 if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTime) {
     $result = file_get_contents($cacheFile);
     $decode = json_decode($result, true);
 } else {
-    $url = 'http://api.geonames.org/countryInfoJSON?formatted=true&country=' . $countryCode . '&username=sulayman2e';
+    $url = 'https://restcountries.com/v3.1/capital/' . urlencode($cityName);
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -26,7 +26,7 @@ if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTime) {
 
     $decode = json_decode($result, true);
 
-    if ($decode !== null && isset($decode['geonames'][0])) {
+    if ($decode !== null && isset($decode[0])) {
         file_put_contents($cacheFile, $result);
     }
 }
@@ -35,7 +35,7 @@ $output['status']['code'] = "200";
 $output['status']['name'] = "ok";
 $output['status']['description'] = "success";
 $output['status']['returnedIn'] = intval((microtime(true) - $executionStartTime) * 1000) . " ms";
-$output['data'] = isset($decode['geonames'][0]) ? $decode['geonames'][0] : [];
+$output['data'] = isset($decode[0]) ? ['countryName' => $decode[0]['name']['common']] : [];
 
 header('Content-Type: application/json; charset=UTF-8');
 echo json_encode($output);
