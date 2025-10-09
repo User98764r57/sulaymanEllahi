@@ -449,7 +449,8 @@ function fetchCountryInformation(isoCode) {
 }
 
 function fetchWeatherDataByISO(isoCode) {
-    document.getElementById('weatherModalContent').innerHTML = '<div class="text-center">Loading...</div>';
+    document.getElementById('weatherModalHeader').innerText = 'Loading...';
+    document.getElementById('weatherModalContent').innerHTML = '<div class="text-center">Loading weather data...</div>';
     
     $.ajax({
         url: 'libs/php/geo_weather.php',
@@ -459,6 +460,7 @@ function fetchWeatherDataByISO(isoCode) {
         timeout: 10000,
         success: function (data) {
             if (data.error) {
+                document.getElementById('weatherModalHeader').innerText = 'Error';
                 document.getElementById('weatherModalContent').innerHTML = `<div class="text-center text-danger">${data.error}</div>`;
                 return;
             }
@@ -514,6 +516,7 @@ function fetchWeatherDataByISO(isoCode) {
             if (status === 'timeout') {
                 errorMessage = 'Weather request timed out. Please try again.';
             }
+            document.getElementById('weatherModalHeader').innerText = 'Error';
             document.getElementById('weatherModalContent').innerHTML = `<div class="text-center text-danger">${errorMessage}</div>`;
         }
     });
