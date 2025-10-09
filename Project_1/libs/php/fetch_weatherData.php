@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
 
-$username = 'sulayman2e';
+$username = '';
 
 $icaoCodes = [
     'KATL', 'KLAX', 'KORD', 'KDFW', 'KDEN', 'KJFK', 'KLAS', 'KMIA', 'KSEA', 'KBOS',
