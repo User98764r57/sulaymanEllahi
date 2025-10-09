@@ -6,31 +6,6 @@ $(document).ready(function() {
     const $weatherStation = $('#selWeatherStation');
     const $resultsTable = $('#resultsTable');
     
-    const earthquakeDates = [
-        '2011-03-11', '2012-04-11', '2007-09-12', '2007-04-01',
-        '2019-05-26', '2016-12-17', '2017-01-22', '2015-04-25'
-    ];
-    
-    const cities = [
-        { value: 'Beijing', label: 'China' },
-        { value: 'Mexico City', label: 'Mexico' },
-        { value: 'Dhaka', label: 'Bangladesh' },
-        { value: 'Seoul', label: 'South Korea' },
-        { value: 'Jakarta', label: 'Indonesia' },
-        { value: 'Tokyo', label: 'Japan' },
-        { value: 'Hanoi', label: 'Vietnam' },
-        { value: 'Taipei', label: 'Taiwan' },
-        { value: 'Bogotá', label: 'Columbia' }
-    ];
-
-    earthquakeDates.forEach(date => {
-        $earthquakeDate.append(`<option value="${date}">${date}</option>`);
-    });
-
-    cities.forEach(city => {
-        $cityCountry.append(`<option value="${city.value}">${city.label}</option>`);
-    });
-
     function showLoading() {
         $resultsTable.html('<div class="text-center p-4"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>');
     }
@@ -66,7 +41,99 @@ $(document).ready(function() {
         });
     }
 
+    function populateEarthquakeDates() {
+        showLoading();
+        
+        $.ajax({
+            url: 'libs/php/getEarthquakes.php',
+            type: 'POST',
+            dataType: 'json',
+            data: { north, south, east, west },
+            timeout: 15000,
+            success: function(result) {
+                $earthquakeDate.empty();
+                if (result.data && result.data.length > 0) {
+                    const dates = [...new Set(result.data.map(eq => eq.datetime.split(' ')[0]))].sort().reverse();
+                    dates.forEach(date => {
+                        $earthquakeDate.append(`<option value="${date}">${date}</option>`);
+                    });
+                } else {
+                    $earthquakeDate.append('<option>No dates available</option>');
+                }
+                $resultsTable.empty();
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.log('Error:', textStatus, errorThrown);
+                showError('Failed to load earthquake dates. Please try again.');
+            }
+        });
+    }
+
+    function getCountryName(cityName) {
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                url: 'libs/php/getCountryInfo.php',
+                type: 'POST',
+                dataType: 'json',
+                data: { cityName: cityName },
+                timeout: 10000,
+                success: function(result) {
+                    if (result.data && result.data.countryName) {
+                        resolve(result.data.countryName);
+                    } else {
+                        resolve(cityName);
+                    }
+                },
+                error: function() {
+                    resolve(cityName);
+                }
+            });
+        });
+    }
+
+    async function populateCities() {
+        showLoading();
+        
+        $.ajax({
+            url: 'libs/php/getCities.php',
+            type: 'POST',
+            dataType: 'json',
+            data: { north, south, east, west },
+            timeout: 15000,
+            success: async function(result) {
+                $cityCountry.empty();
+                if (result.data && result.data.length > 0) {
+                    const uniqueCities = [];
+                    const cityMap = new Map();
+                    
+                    result.data.forEach(city => {
+                        if (!cityMap.has(city.name)) {
+                            cityMap.set(city.name, true);
+                            uniqueCities.push(city);
+                        }
+                    });
+                    
+                    uniqueCities.sort((a, b) => a.name.localeCompare(b.name));
+                    
+                    for (const city of uniqueCities) {
+                        const countryName = await getCountryName(city.name);
+                        $cityCountry.append(`<option value="${city.name}">${countryName}</option>`);
+                    }
+                } else {
+                    $cityCountry.append('<option>No cities available</option>');
+                }
+                $resultsTable.empty();
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.log('Error:', textStatus, errorThrown);
+                showError('Failed to load cities. Please try again.');
+            }
+        });
+    }
+
     populateWeatherStations();
+    populateEarthquakeDates();
+    populateCities();
 
     $('#btnRunWeather').click(function() {
         const selectedStation = $weatherStation.val();
@@ -124,7 +191,7 @@ $(document).ready(function() {
             url: 'libs/php/getEarthquakes.php',
             type: 'POST',
             dataType: 'json',
-            data: { north, south, east, west, date: selectedDate },
+            data: { north, south, east, west },
             timeout: 15000,
             success: function(result) {
                 let resultsHTML = `
@@ -170,7 +237,7 @@ $(document).ready(function() {
             url: 'libs/php/getCities.php',
             type: 'POST',
             dataType: 'json',
-            data: { north, south, east, west, city: selectedCity },
+            data: { north, south, east, west },
             timeout: 15000,
             success: function(result) {
                 let resultsHTML = `
@@ -180,22 +247,25 @@ $(document).ready(function() {
                             <th>Population</th>
                             <th>Latitude</th>
                             <th>Longitude</th>
+                            <th>Country Code</th>
                         </tr>
                     </thead>
                     <tbody>`;
                 
-                if (result.data && result.data.length > 0) {
-                    result.data.forEach(city => {
+                const filteredData = result.data.filter(city => city.name === selectedCity);
+                if (filteredData.length > 0) {
+                    filteredData.forEach(city => {
                         resultsHTML += `
                             <tr>
                                 <td>${city.name || 'N/A'}</td>
                                 <td>${city.population || 'N/A'}</td>
                                 <td>${city.lat || 'N/A'}</td>
                                 <td>${city.lng || 'N/A'}</td>
+                                <td>${city.countryCode || 'N/A'}</td>
                             </tr>`;
                     });
                 } else {
-                    resultsHTML += '<tr><td colspan="4">No data available for the selected city</td></tr>';
+                    resultsHTML += '<tr><td colspan="5">No data available for the selected city</td></tr>';
                 }
                 resultsHTML += '</tbody>';
                 $resultsTable.html(resultsHTML);
