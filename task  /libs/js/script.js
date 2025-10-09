@@ -260,7 +260,6 @@ $(document).ready(function() {
                                 <td>${city.population || 'N/A'}</td>
                                 <td>${city.lat || 'N/A'}</td>
                                 <td>${city.lng || 'N/A'}</td>
-                                <td>${city.countryCode || 'N/A'}</td>
                             </tr>`;
                     });
                 } else {
