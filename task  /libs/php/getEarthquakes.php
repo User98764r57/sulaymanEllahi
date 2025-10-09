@@ -4,8 +4,6 @@ error_reporting(E_ALL);
 
 $executionStartTime = microtime(true);
 
-$date = $_REQUEST['date'];
-
 $cacheFile = 'cache/earthquakes_' . md5($_REQUEST['north'] . $_REQUEST['south'] . $_REQUEST['east'] . $_REQUEST['west']) . '.json';
 $cacheTime = 600;
 
@@ -31,19 +29,11 @@ if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTime) {
     }
 }
 
-if ($date) {
-    $filteredData = array_filter($decode['earthquakes'], function($earthquake) use ($date) {
-        return strpos($earthquake['datetime'], $date) === 0;
-    });
-    $output['data'] = array_values($filteredData);
-} else {
-    $output['data'] = $decode['earthquakes'];
-}
-
 $output['status']['code'] = "200";
 $output['status']['name'] = "ok";
 $output['status']['description'] = "success";
 $output['status']['returnedIn'] = intval((microtime(true) - $executionStartTime) * 1000) . " ms";
+$output['data'] = isset($decode['earthquakes']) ? $decode['earthquakes'] : [];
 
 header('Content-Type: application/json; charset=UTF-8');
 echo json_encode($output);
