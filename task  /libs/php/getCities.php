@@ -4,8 +4,6 @@ error_reporting(E_ALL);
 
 $executionStartTime = microtime(true);
 
-$city = $_REQUEST['city'];
-
 $cacheFile = 'cache/cities_' . md5($_REQUEST['north'] . $_REQUEST['south'] . $_REQUEST['east'] . $_REQUEST['west']) . '.json';
 $cacheTime = 3600;
 
@@ -13,7 +11,7 @@ if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTime) {
     $result = file_get_contents($cacheFile);
     $decode = json_decode($result, true);
 } else {
-    $url = 'http://api.geonames.org/citiesJSON?formatted=true&north=' . $_REQUEST['north'] . '&south=' . $_REQUEST['south'] . '&east=' . $_REQUEST['east'] . '&west=' . $_REQUEST['west'] . '&username=';
+    $url = 'http://api.geonames.org/citiesJSON?formatted=true&north=' . $_REQUEST['north'] . '&south=' . $_REQUEST['south'] . '&east=' . $_REQUEST['east'] . '&west=' . $_REQUEST['west'] . '&username=sulayman2e';
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -31,15 +29,11 @@ if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTime) {
     }
 }
 
-$filteredCities = array_filter($decode['geonames'], function($item) use ($city) {
-    return $item['name'] === $city;
-});
-
 $output['status']['code'] = "200";
 $output['status']['name'] = "ok";
 $output['status']['description'] = "success";
 $output['status']['returnedIn'] = intval((microtime(true) - $executionStartTime) * 1000) . " ms";
-$output['data'] = array_values($filteredCities);
+$output['data'] = isset($decode['geonames']) ? $decode['geonames'] : [];
 
 header('Content-Type: application/json; charset=UTF-8');
 echo json_encode($output);
