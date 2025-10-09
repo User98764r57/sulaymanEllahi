@@ -247,7 +247,6 @@ $(document).ready(function() {
                             <th>Population</th>
                             <th>Latitude</th>
                             <th>Longitude</th>
-                            <th>Country Code</th>
                         </tr>
                     </thead>
                     <tbody>`;
