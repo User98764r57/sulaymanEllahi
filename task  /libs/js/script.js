@@ -69,23 +69,23 @@ $(document).ready(function() {
         });
     }
 
-    function getCountryName(cityName) {
+    function getCountryName(lat, lng) {
         return new Promise((resolve, reject) => {
             $.ajax({
                 url: 'libs/php/getCountryInfo.php',
                 type: 'POST',
                 dataType: 'json',
-                data: { cityName: cityName },
+                data: { lat: lat, lng: lng },
                 timeout: 10000,
                 success: function(result) {
                     if (result.data && result.data.countryName) {
                         resolve(result.data.countryName);
                     } else {
-                        resolve(cityName);
+                        resolve('Unknown Country');
                     }
                 },
                 error: function() {
-                    resolve(cityName);
+                    resolve('Unknown Country');
                 }
             });
         });
@@ -116,7 +116,7 @@ $(document).ready(function() {
                     uniqueCities.sort((a, b) => a.name.localeCompare(b.name));
                     
                     for (const city of uniqueCities) {
-                        const countryName = await getCountryName(city.name);
+                        const countryName = await getCountryName(city.lat, city.lng);
                         $cityCountry.append(`<option value="${city.name}">${countryName}</option>`);
                     }
                 } else {
