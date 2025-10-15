@@ -69,7 +69,7 @@ const baseMaps = {
 const overlayMaps = {};
 
 const cityClusterGroup = L.markerClusterGroup();
-const weatherClusterGroup = L.markerClusterGroup();
+const airportClusterGroup = L.markerClusterGroup();
 
 const cityIcon = L.divIcon({
     className: 'custom-city-icon',
@@ -78,9 +78,9 @@ const cityIcon = L.divIcon({
     iconAnchor: [15, 30]
 });
 
-const weatherIcon = L.divIcon({
-    className: 'custom-weather-icon',
-    html: '<span style="font-size: 24px; color: grey;">&#x26C5;&#xFE0F</span>',
+const airportIcon = L.divIcon({
+    className: 'custom-airport-icon',
+    html: '<span style="font-size: 24px; color: grey;">&#x2708;&#xFE0F;</span>',
     iconSize: [30, 30],
     iconAnchor: [15, 30]
 });
@@ -113,36 +113,34 @@ function fetchCitiesByIsoCode(isoCode) {
         .catch(() => {});
 }
 
-function fetchAndAddWeatherMarkers(isoCode) {
-    const url = 'libs/php/fetch_weatherData.php';
+function fetchAndAddAirportMarkers(isoCode) {
+    const url = `libs/php/fetch_airportData.php?iso_code=${isoCode}`;
 
     fetch(url)
         .then(response => response.json())
         .then(data => {
-            weatherClusterGroup.clearLayers();
-            if (Array.isArray(data.weather)) {
-                const filteredWeather = data.weather.filter(observation => observation.countryCode === isoCode);
-                filteredWeather.forEach(observation => {
-                    const lat = parseFloat(observation.lat);
-                    const lng = parseFloat(observation.lng);
-                    const temperature = observation.temperature || 'N/A';
-                    const humidity = observation.humidity || 'N/A';
-                    const stationName = observation.stationName || 'Unknown Station';
-                    const datetime = observation.datetime || 'N/A';
-                    const formattedTemperature = numeral(temperature).format('0.0') + '°C';
-                    const formattedHumidity = numeral(humidity).format('0,0') + '%';
-                    const formattedDateTime = new Date(datetime).toString('MMMM d, yyyy h:mm tt');
+            airportClusterGroup.clearLayers();
+            if (Array.isArray(data.airports)) {
+                data.airports.forEach(airport => {
+                    const lat = parseFloat(airport.lat);
+                    const lng = parseFloat(airport.lng);
+                    const stationName = airport.stationName || 'Unknown Airport';
+                    const icao = airport.icao || 'N/A';
+                    const iata = airport.iata || 'N/A';
+                    const timezone = airport.timezone || 'N/A';
+                    const gmt = airport.gmt || 'N/A';
 
-                    const marker = L.marker([lat, lng], { icon: weatherIcon })
+                    const marker = L.marker([lat, lng], { icon: airportIcon })
                         .bindPopup(
                             `<b>${stationName}</b><br>
-                            Temperature: ${formattedTemperature}<br>
-                            Humidity: ${formattedHumidity}<br>
-                            Date & Time: ${formattedDateTime}`
+                            ICAO: ${icao}<br>
+                            IATA: ${iata}<br>
+                            Timezone: ${timezone}<br>
+                            GMT: ${gmt}`
                         );
-                    weatherClusterGroup.addLayer(marker);
+                    airportClusterGroup.addLayer(marker);
                 });
-                map.addLayer(weatherClusterGroup);
+                map.addLayer(airportClusterGroup);
             }
         })
         .catch(() => {});
@@ -172,7 +170,7 @@ document.getElementById('countryDropdown').addEventListener('change', function()
 
 function clearAllLayers() {
     cityClusterGroup.clearLayers();
-    weatherClusterGroup.clearLayers();
+    airportClusterGroup.clearLayers();
     
     const highestTimeoutId = setTimeout(() => {}, 0);
     for (let i = 0; i < highestTimeoutId; i++) {
@@ -258,7 +256,7 @@ function highlightCountryOnMap(countryCode) {
 populateCountryDropdown();
 
 overlayMaps["Cities"] = cityClusterGroup;
-overlayMaps["Airports"] = weatherClusterGroup;
+overlayMaps["Airports"] = airportClusterGroup;
 
 L.control.layers(baseMaps, overlayMaps).addTo(map);
 Streets.addTo(map);
@@ -329,7 +327,18 @@ function getUserLocationISO() {
             function (position) {
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
-                fetchISOCodeByCoordinates(lat, lng);
+                $.ajax({
+                    url: 'libs/php/get_iso_code.php',
+                    type: 'GET',
+                    data: { lat: lat, lng: lng },
+                    dataType: 'json',
+                    success: function (data) {
+                        if (data && data.iso_code) {
+                            setDropdownToUserCountry(data.iso_code);
+                        }
+                    },
+                    error: function () {}
+                });
             },
             function () {}
         );
@@ -338,19 +347,25 @@ function getUserLocationISO() {
     }
 }
 
-function fetchISOCodeByCoordinates(lat, lng) {
-    $.ajax({
-        url: 'libs/php/get_iso_code.php',
+function fetchCountryDataByISO(isoCode) {
+    if (currentRequest) {
+        currentRequest.abort();
+    }
+    
+    currentRequest = $.ajax({
+        url: 'libs/php/iso_code.php',
         type: 'GET',
-        data: { lat: lat, lng: lng },
+        data: { iso_code: isoCode },
         dataType: 'json',
-        success: function (data) {
-            if (data && data.iso_code) {
-                setDropdownToUserCountry(data.iso_code);
+        success: function(data) {
+            if (data.country_code) {
+                highlightCountryOnMap(data.country_code);
+                fetchCitiesByIsoCode(isoCode);
+                fetchAndAddAirportMarkers(isoCode);
             }
         },
-        error: function () {}
-    });
+        error: function() {}
+    });    
 }
 
 function setDropdownToUserCountry(isoCode) {
@@ -358,7 +373,7 @@ function setDropdownToUserCountry(isoCode) {
     dropdown.value = isoCode;
     highlightCountryOnMap(isoCode);
     fetchCitiesByIsoCode(isoCode);
-    fetchAndAddWeatherMarkers(isoCode);
+    fetchAndAddAirportMarkers(isoCode);
 }
 
 getUserLocationISO();
