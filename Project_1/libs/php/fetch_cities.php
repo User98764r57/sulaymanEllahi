@@ -2,9 +2,9 @@
 header('Content-Type: application/json');
 
 if (isset($_GET['isoCode'])) {
-    $isoCode = $_GET['isoCode']; 
-    $username = '(enter username/API Key)'; 
-    $url = "http://api.geonames.org/searchJSON?country=$isoCode&maxRows=1000&username=$username";
+    $isoCode = $_GET['isoCode'];
+    $username = ''; 
+    $url = "http://api.geonames.org/searchJSON?country=$isoCode&featureCode=PPL&featureCode=PPLA&featureCode=PPLC&maxRows=1000&username=$username";
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
@@ -52,7 +52,7 @@ if (isset($_GET['isoCode'])) {
 
         $cities = [];
         foreach ($data['geonames'] as $city) {
-            if ($city['countryCode'] === $isoCode) {
+            if ($city['countryCode'] === $isoCode && isset($city['fcode']) && in_array($city['fcode'], ['PPL', 'PPLA', 'PPLC'])) {
                 $latitude = (float)$city['lat'];
                 $longitude = (float)$city['lng'];
 
