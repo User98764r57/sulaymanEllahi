@@ -12,11 +12,6 @@ const bounds = L.latLngBounds(southWest, northEast);
 function checkLoadingComplete() {
     if (userLocationFound && geoJsonLoaded) {
         document.getElementById('preloader').style.display = 'none';
-        setTimeout(() => {
-            if (userCountryLayer) {
-                map.fitBounds(userCountryLayer.getBounds());
-            }
-        }, 1000);
     }
 }
 
@@ -30,7 +25,7 @@ const map = L.map('map', {
     inertiaDeceleration: 2000,
     zoomAnimation: true,
     zoomSnap: 1,
-    zoomDelta: 5,
+    zoomDelta: 1,
     wheelPxPerZoomLevel: 120,
     zoomControl: true,
     maxBounds: bounds,
@@ -249,7 +244,7 @@ function highlightCountryOnMap(countryCode) {
         });
         previouslyHighlightedLayer = countryLayer;
 
-        map.fitBounds(countryLayer.getBounds());
+        map.fitBounds(countryLayer.getBounds(), { padding: [20, 20], maxZoom: 6 });
     }
 }
 
@@ -274,7 +269,6 @@ fetch('libs/js/countryBorders.geojson')
                 };
             }
         }).addTo(map);
-        map.fitBounds(geoJsonLayer.getBounds());
 
         const dropdown = document.getElementById('countryDropdown');
 
@@ -291,61 +285,20 @@ fetch('libs/js/countryBorders.geojson')
             option.textContent = country.properties.name;
             dropdown.appendChild(option);
         });
+        
+        geoJsonLoaded = true;
+        checkLoadingComplete();
     })
-    .catch(() => {});
+    .catch(() => {
+        geoJsonLoaded = true;
+        checkLoadingComplete();
+    });
 
 map.on('zoomend', function () {
     if (map.getZoom() < 2) {
         map.setZoom(2);
     }
 });
-
-function fetchCountryDataByISO(isoCode) {
-    if (currentRequest) {
-        currentRequest.abort();
-    }
-    
-    currentRequest = $.ajax({
-        url: 'libs/php/iso_code.php',
-        type: 'GET',
-        data: { iso_code: isoCode },
-        dataType: 'json',
-        success: function(data) {
-            if (data.country_code) {
-                highlightCountryOnMap(data.country_code);
-                fetchCitiesByIsoCode(isoCode);
-                fetchAndAddWeatherMarkers(isoCode);
-            }
-        },
-        error: function() {}
-    });    
-}
-
-function getUserLocationISO() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            function (position) {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-                $.ajax({
-                    url: 'libs/php/get_iso_code.php',
-                    type: 'GET',
-                    data: { lat: lat, lng: lng },
-                    dataType: 'json',
-                    success: function (data) {
-                        if (data && data.iso_code) {
-                            setDropdownToUserCountry(data.iso_code);
-                        }
-                    },
-                    error: function () {}
-                });
-            },
-            function () {}
-        );
-    } else {
-        alert("Geolocation is not supported by this browser.");
-    }
-}
 
 function fetchCountryDataByISO(isoCode) {
     if (currentRequest) {
@@ -368,29 +321,65 @@ function fetchCountryDataByISO(isoCode) {
     });    
 }
 
+function getUserLocationISO() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            function (position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                
+                setTimeout(() => {
+                    $.ajax({
+                        url: 'libs/php/get_iso_code.php',
+                        type: 'GET',
+                        data: { lat: lat, lng: lng },
+                        dataType: 'json',
+                        success: function (data) {
+                            if (data && data.iso_code) {
+                                setDropdownToUserCountry(data.iso_code);
+                            } else {
+                                userLocationFound = true;
+                                checkLoadingComplete();
+                            }
+                        },
+                        error: function () {
+                            userLocationFound = true;
+                            checkLoadingComplete();
+                        }
+                    });
+                }, 1000);
+            },
+            function () {
+                userLocationFound = true;
+                checkLoadingComplete();
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 60000
+            }
+        );
+    } else {
+        userLocationFound = true;
+        checkLoadingComplete();
+    }
+}
+
 function setDropdownToUserCountry(isoCode) {
     const dropdown = document.getElementById('countryDropdown');
-    dropdown.value = isoCode;
-    highlightCountryOnMap(isoCode);
-    fetchCitiesByIsoCode(isoCode);
-    fetchAndAddAirportMarkers(isoCode);
+    if (dropdown) {
+        dropdown.value = isoCode;
+        setTimeout(() => {
+            highlightCountryOnMap(isoCode);
+            fetchCitiesByIsoCode(isoCode);
+            fetchAndAddAirportMarkers(isoCode);
+        }, 500);
+    }
+    userLocationFound = true;
+    checkLoadingComplete();
 }
 
 getUserLocationISO();
-
-fetch('libs/js/countryBorders.geojson')
-    .then(response => {
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        return response.json();
-    })
-    .then(data => {
-        geoJsonLoaded = true;
-        checkLoadingComplete();
-    })
-    .catch(() => {
-        alert('Error loading GeoJSON file.');
-        checkLoadingComplete();
-    });
 
 function showModal(modalId) {
     document.getElementById(modalId).style.display = 'block';
@@ -538,8 +527,6 @@ function fetchWeatherDataByISO(isoCode) {
 }
 
 function fetchCurrencyDataByISO(isoCode) {
-    console.log('Fetching currency data for:', isoCode);
-    
     document.getElementById('currencyModalContent').innerHTML = '<div class="text-center">Loading currency data...</div>';
     
     $.ajax({
@@ -549,8 +536,6 @@ function fetchCurrencyDataByISO(isoCode) {
         dataType: 'json',
         timeout: 10000,
         success: function (data) {
-            console.log('Currency data received:', data);
-            
             if (data.error) {
                 document.getElementById('currencyModalContent').innerHTML = `<div class="text-center text-danger">${data.error}</div>`;
                 return;
@@ -569,8 +554,6 @@ function fetchCurrencyDataByISO(isoCode) {
                     }
                 }
             }
-            
-            console.log('Target currency code:', toCurrencyCode);
 
             const currencyInfo = `
                 <div class="currency-converter-container">
@@ -601,7 +584,6 @@ function fetchCurrencyDataByISO(isoCode) {
             loadCurrencyOptions('USD', toCurrencyCode);
         },
         error: function (xhr, status, error) {
-            console.error('Currency data error:', error);
             let errorMessage = 'Error fetching currency data.';
             if (status === 'timeout') {
                 errorMessage = 'Currency request timed out. Please try again.';
@@ -612,18 +594,13 @@ function fetchCurrencyDataByISO(isoCode) {
 }
 
 function loadCurrencyOptions(defaultFromCurrency, defaultToCurrency) {
-    console.log('Loading currency options...');
-    
     $.ajax({
         url: 'libs/php/load_currency_options.php',
         type: 'GET',
         dataType: 'json',
         timeout: 10000,
         success: function (data) {
-            console.log('Currency options received:', data);
-            
             if (data.error) {
-                console.error('Currency options error:', data.error);
                 return;
             }
 
@@ -659,7 +636,6 @@ function loadCurrencyOptions(defaultFromCurrency, defaultToCurrency) {
             }
         },
         error: function (xhr, status, error) {
-            console.error('Error loading currency options:', error);
             const basicCurrencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD'];
             const fromDropdown = document.getElementById('from-currency');
             const toDropdown = document.getElementById('to-currency');
@@ -715,7 +691,6 @@ function setupAutomaticCurrencyConversion() {
             dataType: 'json',
             timeout: 10000,
             success: function (response) {
-                console.log('Conversion response:', response);
                 if (response.error) {
                     document.getElementById('conversion-result').textContent = 'Error: ' + response.error;
                     document.getElementById('conversion-result').className = 'conversion-result error';
@@ -730,7 +705,6 @@ function setupAutomaticCurrencyConversion() {
                 }
             },
             error: function (xhr, status, error) {
-                console.error('Conversion error:', error);
                 let errorMessage = 'Conversion error';
                 if (status === 'timeout') {
                     errorMessage = 'Conversion request timed out';
@@ -862,26 +836,3 @@ window.addEventListener('beforeunload', function() {
         currentRequest.abort();
     }
 });
-
-function getUserLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            function (position) {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-
-                userLocationFound = true;
-                checkLoadingComplete();
-            },
-            function () {
-                userLocationFound = true;
-                checkLoadingComplete();
-            }
-        );
-    } else {
-        userLocationFound = true;
-        checkLoadingComplete();
-    }
-}
-
-getUserLocation();
