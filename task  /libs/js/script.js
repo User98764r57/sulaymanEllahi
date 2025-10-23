@@ -3,7 +3,7 @@ $(document).ready(function() {
 
     const $earthquakeDate = $('#selEarthquakeDate');
     const $cityCountry = $('#selCityCountry');
-    const $weatherStation = $('#selWeatherStation');
+    const $weatherStation = $('#selWeatherStation'); 
     const $resultsTable = $('#resultsTable');
     
     function showLoading() {
